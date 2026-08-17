@@ -1,0 +1,6496 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Book Page Generator</title>
+
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+
+
+<style>
+
+/* =========================================================
+   GOOGLE FONTS
+========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gaegu:wght@400;700&family=Gowun+Batang:wght@400;700&family=Gugi&family=Hahmlet:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@400;500;600;700&family=Noto+Serif+KR:wght@400;500;600;700&family=Song+Myung&display=swap');
+
+@font-face{
+  font-family:"조선일보명조";
+  src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Chosunilbo_myungjo.woff") format("woff");
+  font-weight:400;
+  font-style:normal;
+  font-display:swap;
+}
+
+@font-face{
+  font-family:"Chosunilbo_myungjo";
+  src:url("https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/Chosunilbo_myungjo.woff") format("woff");
+  font-weight:400;
+  font-style:normal;
+  font-display:swap;
+}
+
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+@font-face{
+  font-family:"KoPubWorldBatang";
+  src:url("https://cdn.jsdelivr.net/gh/woffz/b3@main/KoPubWorldBatang/KoPubWorldBatangLight.woff2") format("woff2");
+  font-weight:400; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"KoPubWorldBatang";
+  src:url("https://cdn.jsdelivr.net/gh/woffz/b3@main/KoPubWorldBatang/KoPubWorldBatangMedium-500.woff2") format("woff2");
+  font-weight:500; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"KoPubWorldBatang";
+  src:url("https://cdn.jsdelivr.net/gh/woffz/b3@main/KoPubWorldBatang/KoPubWorldBatangBold-600.woff2") format("woff2");
+  font-weight:600; font-style:normal; font-display:swap;
+}
+@font-face{
+  font-family:"KoPubWorldBatang";
+  src:url("https://cdn.jsdelivr.net/gh/woffz/b3@main/KoPubWorldBatang/KoPubWorldBatangBold-600.woff2") format("woff2");
+  font-weight:700; font-style:normal; font-display:swap;
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:#dedbd4;}
+body{color:#292825;font-family:"Noto Serif KR",serif;}
+
+.workspace{
+  display:grid;
+  grid-template-columns:minmax(500px,1.15fr) minmax(430px,.85fr);
+  gap:24px; width:100%; min-height:100vh; padding:25px;
+}
+.editor-side,.preview-side{min-width:0;}
+
+.editor{width:100%;padding:28px;background:#f8f6f1;border:1px solid #d2cec6;border-radius:6px;}
+.editor-title{margin-bottom:25px;font-family:"Noto Sans KR",sans-serif;font-size:20px;font-weight:600;letter-spacing:.08em;}
+
+.input-row{display:flex;gap:15px;margin-bottom:15px;}
+.input-box{flex:1;min-width:0;}
+.input-box.small{flex:0 0 150px;}
+.input-box label{display:block;margin-bottom:7px;font-family:"Noto Sans KR",sans-serif;font-size:13px;letter-spacing:.08em;color:#999;}
+
+input,select,textarea{font-family:inherit;}
+input[type=text],input[type=number]{
+  width:100%;padding:12px 14px;border:1px solid #d8d5cf;border-radius:4px;background:#fff;color:#292825;font-size:15px;outline:none;
+}
+input:focus,select:focus,textarea:focus{border-color:#999;}
+
+.toolbar{
+  display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px;padding:8px;background:#eeeae3;border:1px solid #d8d5cf;border-radius:4px;
+}
+.toolbar-label{margin-right:8px;font-family:"Noto Sans KR",sans-serif;font-size:12px;color:#888;}
+.toolbar button{
+  min-width:34px;height:32px;padding:0 9px;border:1px solid #d2cec6;border-radius:3px;background:#f8f6f1;color:#292825;font-family:"Noto Sans KR",sans-serif;font-size:13px;cursor:pointer;
+}
+.toolbar button:hover{background:#ddd9d1;}
+.toolbar button.active{background:#292825;color:#fff;}
+.toolbar-divider{width:1px;height:22px;margin:0 5px;background:#d0ccc4;}
+.toolbar select{height:32px;padding:0 7px;border:1px solid #d2cec6;border-radius:3px;background:#f8f6f1;font-size:12px;}
+.toolbar input[type=color]{width:34px;height:32px;padding:2px;border:1px solid #d2cec6;border-radius:3px;background:#f8f6f1;cursor:pointer;}
+
+
+#contentEditor{
+  width:100%;height:450px;min-height:450px;max-height:450px;padding:16px;border:1px solid #d8d5cf;border-radius:4px;background:#fff;color:#292825;
+  font-family:"Noto Serif KR",serif;font-size:24px;font-weight:400;font-style:normal;line-height:1.8;letter-spacing:0;outline:none;overflow-y:auto;overflow-x:hidden;resize:none;word-break:keep-all;overflow-wrap:break-word;
+}
+#contentEditor:focus{border-color:#999;}
+
+#contentEditor p,#contentEditor div{
+  margin:0;padding:0;min-height:1em;font-family:inherit;font-size:inherit;font-weight:inherit;font-style:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;word-break:keep-all;overflow-wrap:break-word;
+}
+#contentEditor p + p,#contentEditor div + div,#contentEditor p + div,#contentEditor div + p{margin-top:var(--paragraph-spacing,0px);}
+
+.style-panel,.background-panel{margin-top:20px;padding:20px;border-top:1px solid #d8d5cf;background:#f2efe9;border-radius:4px;}
+.style-title,.background-title{margin-bottom:15px;font:600 14px "Noto Sans KR",sans-serif;letter-spacing:.08em;color:#777;}
+
+.style-group{margin-bottom:10px;border:1px solid #d8d5cf;border-radius:5px;background:#f8f6f1;overflow:hidden;}
+.style-group:last-child{margin-bottom:0;}
+.style-group summary{
+  position:relative;display:flex;align-items:center;min-height:46px;padding:0 15px;cursor:pointer;list-style:none;user-select:none;font:600 13px "Noto Sans KR",sans-serif;letter-spacing:.05em;color:#555;
+}
+.style-group summary::-webkit-details-marker{display:none;}
+.style-group summary:before{
+  content:"＋";display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;margin-right:8px;font:14px "Noto Sans KR",sans-serif;color:#999;
+}
+.style-group[open] summary{border-bottom:1px solid #e0ddd6;background:#f1eee8;}
+.style-group[open] summary:before{content:"−";}
+.style-group summary:hover{background:#eeeae3;}
+.style-group-content{padding:15px;}
+
+.style-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;}
+.style-item{min-width:0;}
+.style-item label{display:block;margin-bottom:6px;font:12px "Noto Sans KR",sans-serif;color:#888;}
+
+.style-label-row{display:flex!important;align-items:center;justify-content:space-between;gap:8px;width:100%;margin-bottom:6px!important;}
+.style-current-value{
+  flex:none;padding:2px 6px;border:1px solid #d8d5cf;border-radius:3px;background:#eeeae3;color:#666;font:11px "Noto Sans KR",sans-serif;line-height:1.5;white-space:nowrap;
+}
+.style-item input[type=color]{width:100%;height:40px;padding:3px;cursor:pointer;}
+.style-item input[type=number]{width:100%;height:40px;}
+.style-check{display:flex!important;align-items:center;gap:7px;height:40px;font:13px "Noto Sans KR",sans-serif!important;}
+
+.margin-preview{grid-column:1 / -1;margin-top:4px;padding:12px 14px;background:#ebe7df;border:1px solid #d8d5cf;border-radius:4px;font:12px "Noto Sans KR",sans-serif;color:#888;}
+.margin-preview strong{color:#555;}
+
+.background-grid{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr;gap:15px;align-items:end;}
+.background-item label{display:block;margin-bottom:6px;font:12px "Noto Sans KR",sans-serif;color:#888;}
+.background-item input[type=file]{width:100%;height:40px;padding:8px;border:1px solid #d8d5cf;border-radius:4px;background:#fff;font:12px "Noto Sans KR",sans-serif;}
+.background-item input[type=range]{width:100%;margin-top:8px;}
+.range-value{margin-top:4px;font:11px "Noto Sans KR",sans-serif;color:#999;}
+.remove-bg-btn{width:100%;height:40px;border:1px solid #d2cec6;border-radius:4px;background:#fff;color:#555;font:13px "Noto Sans KR",sans-serif;cursor:pointer;}
+.background-note{margin-top:12px;font:11px "Noto Sans KR",sans-serif;color:#999;}
+
+.control-area{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;}
+.download-btn{border:0;padding:13px 20px;background:#292825;color:#f8f6f1;font:14px "Noto Sans KR",sans-serif;cursor:pointer;border-radius:4px;}
+.download-btn.secondary{background:#aaa59d;}
+
+.preview-sticky{position:sticky;top:25px;width:100%;}
+.preview-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:0 4px;font:600 14px "Noto Sans KR",sans-serif;letter-spacing:.08em;color:#777;}
+
+.preview-navigation{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;}
+.preview-nav-btn{
+  width:42px;height:34px;border:1px solid #d2cec6;border-radius:4px;background:#f8f6f1;color:#555;font:16px "Noto Sans KR",sans-serif;cursor:pointer;transition:background .15s ease,opacity .15s ease;
+}
+.preview-nav-btn:hover:not(:disabled){background:#ddd9d1;}
+.preview-nav-btn:disabled{opacity:.35;cursor:default;}
+.preview-index{min-width:95px;text-align:center;font:12px "Noto Sans KR",sans-serif;color:#888;}
+
+#previewViewport{width:100%;overflow:hidden;position:relative;transition:height .2s ease;}
+#previewArea{display:flex;width:100%;overflow:visible;transition:transform .35s ease;will-change:transform;}
+
+.preview-page-wrap{position:relative;flex:0 0 100%;width:100%;margin:0;overflow:visible;}
+
+.book-page{
+  position:relative;width:1080px;height:1350px;padding-top:110px;padding-bottom:110px;overflow:hidden;background:#f8f6f1;color:#292825;box-shadow:0 8px 30px rgba(0,0,0,.10);transform-origin:top left;font-family:"Noto Serif KR",serif;font-size:24px;line-height:1.8;font-weight:400;font-style:normal;letter-spacing:0;
+}
+
+.book-page-bg{position:absolute!important;inset:0;z-index:0!important;pointer-events:none;overflow:hidden;}
+.book-page-bg img{position:absolute;inset:0;width:100%;height:100%;object-position:center center;object-fit:cover;}
+
+.book-page > .subtitle-space,
+.book-page > .book-title-space,
+.book-page > .book-columns,
+.book-page > .book-content-single{position:relative;z-index:2;}
+
+.page-number{position:absolute!important;top:52px;right:85px;z-index:5!important;margin:0;font-size:15px;line-height:1;letter-spacing:.15em;pointer-events:none;}
+
+.subtitle-space{display:block;width:100%;height:82.5px;margin:0;flex:none;}
+.subtitle{margin:0;font-size:15px;line-height:1.5;letter-spacing:.28em;color:#999;}
+.subtitle-space.empty .subtitle{visibility:hidden;}
+.subtitle-space.collapsed{height:0!important;overflow:hidden;}
+
+.book-title-space{display:block;width:100%;height:118px;margin:0;flex:none;}
+.book-title{margin:0;font-size:42px;font-weight:500;letter-spacing:-.04em;line-height:1.5;}
+.book-title-space.empty .book-title{visibility:hidden;}
+.book-title-space.collapsed{height:0!important;overflow:hidden;}
+
+.book-content-single{
+  display:flow-root;width:100%;font-size:24px;line-height:1.8;font-weight:400;font-style:normal;letter-spacing:0;word-break:keep-all;overflow-wrap:break-word;transform-origin:center center;
+}
+.book-content-single p,.book-content-single div{
+  margin:0;padding:0;white-space:pre-wrap;word-break:keep-all;overflow-wrap:break-word;font-family:inherit;font-size:inherit;font-weight:inherit;font-style:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;
+}
+.book-content-single p + p,.book-content-single div + div,.book-content-single p + div,.book-content-single div + p{margin-top:var(--paragraph-spacing,0px);}
+.book-content-single p:last-child{margin-bottom:0;}
+.book-content-single p.auto-indent{text-indent:1em;}
+
+.book-columns{
+  display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:70px;position:relative;width:100%;align-items:start;transform-origin:center center;
+}
+.book-columns.has-divider:after{
+  content:"";position:absolute;left:50%;top:var(--divider-top,0px);width:var(--divider-width,1px);height:var(--divider-height,0px);background:var(--divider-color,#d8d5cf);transform:translateX(-50%);pointer-events:none;z-index:1;
+}
+.book-column{min-width:0;font-size:24px;line-height:1.8;font-weight:400;font-style:normal;letter-spacing:0;word-break:keep-all;overflow-wrap:break-word;}
+.book-column p,.book-column div{
+  margin:0;padding:0;white-space:pre-wrap;word-break:keep-all;overflow-wrap:break-word;font-family:inherit;font-size:inherit;font-weight:inherit;font-style:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;
+}
+.book-column p + p,.book-column div + div,.book-column p + div,.book-column div + p{margin-top:var(--paragraph-spacing,0px);}
+.book-column p:last-child{margin-bottom:0;}
+.book-column p.auto-indent{text-indent:1em;}
+
+.page-end{
+  position:absolute!important;bottom:55px;z-index:5!important;height:auto;margin:0;padding-top:18px;border-top:1px solid var(--footer-border-color,#d8d5cf);font-size:13px;line-height:1.4;color:var(--footer-text-color,#aaa);letter-spacing:.15em;text-align:right;pointer-events:none;
+}
+
+#measurePage{
+  position:absolute;left:-100000px;top:0;width:1080px;height:1350px;padding-top:110px;padding-bottom:110px;overflow:hidden;visibility:hidden;pointer-events:none;background:#f8f6f1;
+}
+
+.save-message{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);padding:18px 30px;background:rgba(41,40,37,.92);color:white;border-radius:5px;font:15px "Noto Sans KR",sans-serif;z-index:9999;display:none;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:1200px){
+  .workspace{grid-template-columns:1fr;}
+  .preview-sticky{position:relative;top:auto;}
+}
+
+@media(max-width:700px){
+  .workspace{padding:10px;gap:16px;}
+  .editor{padding:16px;}
+  .editor-title{font-size:17px;margin-bottom:16px;}
+
+  .style-grid{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .background-grid{grid-template-columns:1fr 1fr;gap:10px;}
+
+  .input-row{flex-direction:column;gap:12px;}
+  .input-box.small{flex:auto;}
+
+  input[type=text],input[type=number]{padding:10px 12px;font-size:14px;}
+
+  .toolbar{gap:5px;padding:6px;}
+  .toolbar button{min-width:30px;height:30px;padding:0 7px;font-size:12px;}
+  .toolbar select{height:30px;font-size:11px;padding:0 5px;}
+  .toolbar input[type=color]{width:30px;height:30px;}
+
+  #contentEditor{height:320px;min-height:320px;max-height:320px;font-size:16px;padding:12px;}
+
+  .style-panel,.background-panel{padding:14px;margin-top:14px;}
+
+  .control-area{flex-direction:column;}
+  .download-btn{width:100%;padding:14px 16px;}
+
+  .preview-nav-btn{width:38px;height:32px;}
+
+  .book-page{box-shadow:0 4px 16px rgba(0,0,0,.12);}
+}
+
+@media(max-width:420px){
+  .style-grid{grid-template-columns:1fr 1fr;}
+  .background-grid{grid-template-columns:1fr 1fr;}
+}
+
+</style>
+</head>
+
+
+<body>
+
+<div class="workspace">
+
+<div class="editor-side">
+
+<div class="editor">
+
+<div class="editor-title">
+BOOK PAGE EDITOR
+</div>
+
+
+<div class="input-row">
+
+<div class="input-box">
+
+<label>SUBTITLE</label>
+
+<input
+type="text"
+id="subtitleInput"
+value="SUBTITLE 01"
+>
+
+</div>
+
+
+<div class="input-box small">
+
+<label>START PAGE</label>
+
+<input
+type="number"
+id="pageInput"
+value="1"
+min="1"
+>
+
+</div>
+
+</div>
+
+
+<div
+class="input-box"
+style="margin-bottom:15px"
+>
+
+<label>TITLE</label>
+
+<input
+type="text"
+id="titleInput"
+value="글의 제목이 들어가는 자리"
+>
+
+</div>
+
+
+<div
+class="input-box"
+style="margin-bottom:15px"
+>
+
+<label>CONTENT</label>
+
+
+<div class="toolbar">
+
+<span class="toolbar-label">
+선택한 글 서식
+</span>
+
+
+<button
+type="button"
+id="btnBold"
+onmousedown="keepSelection(event)"
+onclick="formatText('bold')">
+<b>B</b>
+</button>
+
+
+<button
+type="button"
+id="btnItalic"
+onmousedown="keepSelection(event)"
+onclick="formatText('italic')">
+<i>I</i>
+</button>
+
+
+<button
+type="button"
+id="btnUnderline"
+onmousedown="keepSelection(event)"
+onclick="formatText('underline')">
+<u>U</u>
+</button>
+
+
+<button
+type="button"
+id="btnStrike"
+onmousedown="keepSelection(event)"
+onclick="formatText('strikeThrough')">
+<s>S</s>
+</button>
+
+
+<div class="toolbar-divider"></div>
+
+
+<button
+type="button"
+id="btnAlignLeft"
+onmousedown="keepSelection(event)"
+onclick="alignSelection('left')">
+왼쪽
+</button>
+
+
+<button
+type="button"
+id="btnAlignCenter"
+onmousedown="keepSelection(event)"
+onclick="alignSelection('center')">
+가운데
+</button>
+
+
+<button
+type="button"
+id="btnAlignRight"
+onmousedown="keepSelection(event)"
+onclick="alignSelection('right')">
+오른쪽
+</button>
+
+
+<button
+type="button"
+id="btnAlignJustify"
+onmousedown="keepSelection(event)"
+onclick="alignSelection('justify')">
+양쪽
+</button>
+
+
+<div class="toolbar-divider"></div>
+
+
+<select id="inlineFont">
+
+<option value="">폰트</option>
+
+<option value="Noto Serif KR">Noto Serif KR</option>
+<option value="Nanum Myeongjo">나눔명조</option>
+<option value="Gowun Batang">고운바탕</option>
+<option value="Song Myung">송명</option>
+<option value="Hahmlet">함렛</option>
+<option value="조선일보명조">조선일보명조</option>
+<option value="KoPubWorldBatang">KoPubWorld바탕</option>
+<option value="Pretendard">Pretendard</option>
+<option value="Noto Sans KR">Noto Sans KR</option>
+<option value="IBM Plex Sans KR">IBM Plex Sans KR</option>
+<option value="Black Han Sans">검은고딕</option>
+<option value="Gugi">구기</option>
+<option value="Gaegu">개구</option>
+
+</select>
+
+
+
+
+<input
+type="color"
+id="inlineColor"
+value="#292825"
+>
+
+
+<input
+type="color"
+id="highlightColor"
+value="#fff2a8"
+>
+
+
+<button
+type="button"
+onmousedown="keepSelection(event)"
+onclick="applyHighlight()">
+형광
+</button>
+
+
+<button
+type="button"
+onmousedown="keepSelection(event)"
+onclick="removeInlineFormat()">
+T
+</button>
+
+</div>
+
+
+<div id="contentEditor" contenteditable="true">
+
+<p>여기에 첫 번째 문단을 입력하세요.</p>
+
+<p>
+긴 글을 통째로 붙여넣어도 괜찮습니다.
+페이지 높이에 맞춰 자동으로 다음 페이지로 넘어갑니다.
+</p>
+
+<p>
+문단을 나누고 싶다면 엔터를 눌러주세요.
+</p>
+
+<p>
+처음에는 이것이 어떤 의미를 가지게 될지 알지 못했다.
+그저 평소와 다르지 않은 하루였고,
+조금 더 길고 조금 더 조용한 시간이었다.
+</p>
+
+<p>
+그리고 우리는 다시 아무 일도 없었다는 듯 다음 페이지를 넘긴다.
+</p>
+
+</div>
+
+</div>
+
+
+<!-- =====================================================
+     PAGE STYLE
+===================================================== -->
+
+<div class="style-panel">
+
+<div class="style-title">
+PAGE STYLE
+</div>
+
+
+<!-- BASIC -->
+
+<details class="style-group" open>
+
+<summary>
+기본 스타일
+</summary>
+
+<div class="style-group-content">
+
+<div class="style-grid">
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>배경색</span>
+<span class="style-current-value" id="value-bgColor">#f8f6f1</span>
+</label>
+
+<input
+type="color"
+id="bgColor"
+value="#f8f6f1">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>본문 색상</span>
+<span class="style-current-value" id="value-bodyColor">#292825</span>
+</label>
+
+<input
+type="color"
+id="bodyColor"
+value="#292825">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>본문 폰트</span>
+<span class="style-current-value" id="value-fontFamily">Noto Serif KR</span>
+</label>
+
+<select id="fontFamily">
+
+<option value="Noto Serif KR">Noto Serif KR</option>
+<option value="Nanum Myeongjo">나눔명조</option>
+<option value="Gowun Batang">고운바탕</option>
+<option value="Song Myung">송명</option>
+<option value="Hahmlet">함렛</option>
+<option value="조선일보명조">조선일보명조</option>
+<option value="KoPubWorldBatang">KoPubWorld바탕</option>
+<option value="Pretendard">Pretendard</option>
+<option value="Noto Sans KR">Noto Sans KR</option>
+<option value="IBM Plex Sans KR">IBM Plex Sans KR</option>
+<option value="Black Han Sans">검은고딕</option>
+<option value="Gugi">구기</option>
+<option value="Gaegu">개구</option>
+
+</select>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>본문 크기</span>
+<span class="style-current-value" id="value-fontSize">24px</span>
+</label>
+
+<input
+type="number"
+id="fontSize"
+value="24"
+min="10"
+max="60">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>줄간격</span>
+<span class="style-current-value" id="value-lineHeight">180%</span>
+</label>
+
+<select id="lineHeight">
+
+<option value="120">120%</option>
+<option value="130">130%</option>
+<option value="140">140%</option>
+<option value="150">150%</option>
+<option value="160">160%</option>
+<option value="170">170%</option>
+<option value="180" selected>180%</option>
+<option value="190">190%</option>
+<option value="200">200%</option>
+<option value="210">210%</option>
+<option value="220">220%</option>
+<option value="230">230%</option>
+<option value="240">240%</option>
+<option value="250">250%</option>
+<option value="260">260%</option>
+<option value="270">270%</option>
+<option value="280">280%</option>
+<option value="290">290%</option>
+<option value="300">300%</option>
+
+</select>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>본문 자간</span>
+<span class="style-current-value" id="value-letterSpacing">0%</span>
+</label>
+
+<select id="letterSpacing">
+
+<option value="-10">-10%</option>
+<option value="-9">-9%</option>
+<option value="-8">-8%</option>
+<option value="-7">-7%</option>
+<option value="-6">-6%</option>
+<option value="-5">-5%</option>
+<option value="-4">-4%</option>
+<option value="-3">-3%</option>
+<option value="-2">-2%</option>
+<option value="-1">-1%</option>
+<option value="0" selected>0%</option>
+<option value="1">+1%</option>
+<option value="2">+2%</option>
+<option value="3">+3%</option>
+<option value="4">+4%</option>
+<option value="5">+5%</option>
+<option value="6">+6%</option>
+<option value="7">+7%</option>
+<option value="8">+8%</option>
+<option value="9">+9%</option>
+<option value="10">+10%</option>
+<option value="12">+12%</option>
+<option value="15">+15%</option>
+<option value="20">+20%</option>
+
+</select>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>본문 굵기</span>
+<span class="style-current-value" id="value-bodyWeight">일반</span>
+</label>
+
+<select id="bodyWeight">
+
+<option value="400">일반</option>
+<option value="500">중간</option>
+<option value="600">세미볼드</option>
+<option value="700">볼드</option>
+
+</select>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>본문 전체 기울임</span>
+<span class="style-current-value" id="value-bodyItalic">미사용</span>
+</label>
+
+<label class="style-check">
+
+<input
+type="checkbox"
+id="bodyItalic">
+
+사용
+
+</label>
+
+</div>
+
+
+</div>
+
+</div>
+
+</details>
+
+
+<!-- TITLE -->
+
+<details class="style-group">
+
+<summary>
+제목 / 서브타이틀
+</summary>
+
+<div class="style-group-content">
+
+<div class="style-grid">
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>제목 색상</span>
+<span class="style-current-value" id="value-titleColor">#292825</span>
+</label>
+
+<input
+type="color"
+id="titleColor"
+value="#292825">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>서브타이틀 색상</span>
+<span class="style-current-value" id="value-subtitleColor">#999999</span>
+</label>
+
+<input
+type="color"
+id="subtitleColor"
+value="#999999">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>제목 폰트</span>
+<span class="style-current-value" id="value-titleFontFamily">Noto Serif KR</span>
+</label>
+
+<select id="titleFontFamily">
+
+<option value="Noto Serif KR">Noto Serif KR</option>
+<option value="Nanum Myeongjo">나눔명조</option>
+<option value="Gowun Batang">고운바탕</option>
+<option value="Song Myung">송명</option>
+<option value="Hahmlet">함렛</option>
+<option value="조선일보명조">조선일보명조</option>
+<option value="KoPubWorldBatang">KoPubWorld바탕</option>
+<option value="Pretendard">Pretendard</option>
+<option value="Noto Sans KR">Noto Sans KR</option>
+<option value="IBM Plex Sans KR">IBM Plex Sans KR</option>
+<option value="Black Han Sans">검은고딕</option>
+<option value="Gugi">구기</option>
+<option value="Gaegu">개구</option>
+
+</select>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>제목 굵기</span>
+<span class="style-current-value" id="value-titleWeight">중간</span>
+</label>
+
+<select id="titleWeight">
+
+<option value="400">일반</option>
+<option value="500" selected>중간</option>
+<option value="600">세미볼드</option>
+<option value="700">볼드</option>
+
+</select>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>제목 기울임</span>
+<span class="style-current-value" id="value-titleItalic">미사용</span>
+</label>
+
+<label class="style-check">
+
+<input
+type="checkbox"
+id="titleItalic">
+
+사용
+
+</label>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>서브타이틀 표시</span>
+<span class="style-current-value" id="value-showSubtitle">표시</span>
+</label>
+
+<label class="style-check">
+
+<input
+type="checkbox"
+id="showSubtitle"
+checked>
+
+표시
+
+</label>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>메인타이틀 표시</span>
+<span class="style-current-value" id="value-showTitle">표시</span>
+</label>
+
+<label class="style-check">
+
+<input
+type="checkbox"
+id="showTitle"
+checked>
+
+표시
+
+</label>
+
+</div>
+
+
+</div>
+
+</div>
+
+</details>
+
+
+<!-- PAGE -->
+
+<details class="style-group">
+
+<summary>
+페이지 설정
+</summary>
+
+<div class="style-group-content">
+
+<div class="style-grid">
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>페이지 숫자</span>
+<span class="style-current-value" id="value-showPageNumber">표시</span>
+</label>
+
+<label class="style-check">
+
+<input
+type="checkbox"
+id="showPageNumber"
+checked>
+
+표시
+
+</label>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>페이지 숫자 색상</span>
+<span class="style-current-value" id="value-pageNumberColor">#aaaaaa</span>
+</label>
+
+<input
+type="color"
+id="pageNumberColor"
+value="#aaaaaa">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>페이지 하단 문구</span>
+<span class="style-current-value" id="value-footerText">END OF PAGE</span>
+</label>
+
+<input
+type="text"
+id="footerText"
+value="END OF PAGE"
+style="width:100%;height:40px;">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>페이지 하단 선 색상</span>
+<span class="style-current-value" id="value-footerBorderColor">#d8d5cf</span>
+</label>
+
+<input
+type="color"
+id="footerBorderColor"
+value="#d8d5cf">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>페이지 하단 문구 색상</span>
+<span class="style-current-value" id="value-footerTextColor">#aaaaaa</span>
+</label>
+
+<input
+type="color"
+id="footerTextColor"
+value="#aaaaaa">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>본문 전체 정렬</span>
+<span class="style-current-value" id="value-bodyTextAlign">왼쪽부터</span>
+</label>
+
+<select id="bodyTextAlign">
+
+<option value="left" selected>왼쪽부터</option>
+<option value="center">가운데</option>
+<option value="right">오른쪽부터</option>
+<option value="justify">양쪽 꽉채움</option>
+
+</select>
+
+</div>
+
+
+</div>
+
+</div>
+
+</details>
+
+
+<!-- COLUMN -->
+
+<details class="style-group">
+
+<summary>
+본문 단 / 구분선
+</summary>
+
+<div class="style-group-content">
+
+<div class="style-grid">
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>본문 레이아웃</span>
+<span class="style-current-value" id="value-columnMode">1단</span>
+</label>
+
+<select id="columnMode">
+
+<option value="1">1단</option>
+<option value="2">2단</option>
+
+</select>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>2단 가운데 구분선</span>
+<span class="style-current-value" id="value-showColumnDivider">표시</span>
+</label>
+
+<label class="style-check">
+
+<input
+type="checkbox"
+id="showColumnDivider"
+checked>
+
+표시
+
+</label>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>2단 가운데 구분선 색상</span>
+<span class="style-current-value" id="value-dividerColor">#d8d5cf</span>
+</label>
+
+<input
+type="color"
+id="dividerColor"
+value="#d8d5cf">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>2단 가운데 선 두께</span>
+<span class="style-current-value" id="value-dividerWidth">2px</span>
+</label>
+
+<select id="dividerWidth">
+
+<option value="1">1px</option>
+<option value="2" selected>2px</option>
+<option value="3">3px</option>
+<option value="4">4px</option>
+<option value="5">5px</option>
+<option value="6">6px</option>
+<option value="7">7px</option>
+<option value="8">8px</option>
+<option value="9">9px</option>
+<option value="10">10px</option>
+
+</select>
+
+</div>
+
+
+</div>
+
+</div>
+
+</details>
+
+
+<!-- LAYOUT -->
+
+<details class="style-group">
+
+<summary>
+정렬 / 들여쓰기 / 여백
+</summary>
+
+<div class="style-group-content">
+
+<div class="style-grid">
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>본문 세로 위치</span>
+<span class="style-current-value" id="value-verticalAlign">위쪽부터</span>
+</label>
+
+<select id="verticalAlign">
+
+<option value="top">위쪽부터</option>
+<option value="center">세로 중앙</option>
+
+</select>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>엔터 시 들여쓰기</span>
+<span class="style-current-value" id="value-enterIndent">미사용</span>
+</label>
+
+<label class="style-check">
+
+<input
+type="checkbox"
+id="enterIndent">
+
+사용
+
+</label>
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>문단 간격</span>
+<span class="style-current-value" id="value-paragraphSpacing">0px</span>
+</label>
+
+<input
+type="number"
+id="paragraphSpacing"
+value="0"
+min="0"
+max="100"
+step="1">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>왼쪽 여백</span>
+<span class="style-current-value" id="value-leftMargin">120px</span>
+</label>
+
+<input
+type="number"
+id="leftMargin"
+value="120"
+min="40"
+max="300"
+step="5">
+
+</div>
+
+
+<div class="style-item">
+
+<label class="style-label-row">
+<span>오른쪽 여백</span>
+<span class="style-current-value" id="value-rightMargin">120px</span>
+</label>
+
+<input
+type="number"
+id="rightMargin"
+value="120"
+min="40"
+max="300"
+step="5">
+
+</div>
+
+
+<div class="margin-preview">
+
+현재 본문 좌우 여백 :
+<strong id="marginPreview">
+왼쪽 120px / 오른쪽 120px
+</strong>
+
+</div>
+
+
+</div>
+
+</div>
+
+</details>
+
+
+</div>
+
+
+<div class="background-panel">
+
+<div class="background-title">
+BACKGROUND IMAGE
+</div>
+
+
+<div class="background-grid">
+
+
+<div class="background-item">
+
+<label>배경 사진</label>
+
+<input
+type="file"
+id="backgroundImage"
+accept="image/*">
+
+</div>
+
+
+<div class="background-item">
+
+<label>사진 불투명도</label>
+
+<input
+type="range"
+id="backgroundOpacity"
+min="0"
+max="100"
+value="25">
+
+<div
+class="range-value"
+id="backgroundOpacityValue">
+25%
+</div>
+
+</div>
+
+
+<div class="background-item">
+
+<label>이미지 크기</label>
+
+<select id="backgroundSize">
+
+<option value="cover">Cover</option>
+<option value="contain">Contain</option>
+<option value="100% 100%">페이지에 맞춤</option>
+
+</select>
+
+</div>
+
+
+<div class="background-item">
+
+<label>이미지 위치</label>
+
+<select id="backgroundPosition">
+
+<option value="center center">가운데</option>
+<option value="center top">위쪽</option>
+<option value="center bottom">아래쪽</option>
+<option value="left center">왼쪽</option>
+<option value="right center">오른쪽</option>
+
+</select>
+
+</div>
+
+
+</div>
+
+
+<div
+style="
+margin-top:15px;
+display:flex;
+justify-content:flex-end;">
+
+<button
+type="button"
+class="remove-bg-btn"
+id="removeBackground"
+style="max-width:180px">
+배경 사진 제거
+</button>
+
+</div>
+
+
+<div class="background-note">
+※ 사진은 현재 브라우저에서만 사용되며 서버에 업로드되지 않습니다.
+</div>
+
+</div>
+
+
+<div class="control-area">
+
+<button
+class="download-btn secondary"
+onclick="downloadAllPages()">
+전체 페이지 저장
+</button>
+
+
+<button
+class="download-btn"
+onclick="downloadCurrentPage()">
+현재 페이지 저장
+</button>
+
+</div>
+
+
+</div>
+
+</div>
+
+
+<div class="preview-side">
+
+<div class="preview-sticky">
+
+<div class="preview-header">
+
+<span>PREVIEW</span>
+
+<span
+class="page-count"
+id="pageCount">
+1 PAGE
+</span>
+
+</div>
+
+
+<!-- =====================================================
+     미리보기 페이지 이동 버튼
+===================================================== -->
+
+<div class="preview-navigation">
+
+<button
+type="button"
+class="preview-nav-btn"
+id="prevPageBtn"
+onclick="goToPage(currentPageIndex-1)">
+‹
+</button>
+
+<span
+class="preview-index"
+id="previewIndex">
+1 / 1
+</span>
+
+<button
+type="button"
+class="preview-nav-btn"
+id="nextPageBtn"
+onclick="goToPage(currentPageIndex+1)">
+›
+</button>
+
+</div>
+
+
+<!-- =====================================================
+     미리보기 슬라이드 영역
+===================================================== -->
+
+<div id="previewViewport">
+
+<div id="previewArea"></div>
+
+</div>
+
+</div>
+
+</div>
+
+
+</div>
+
+
+<div id="measurePage"></div>
+
+
+<div
+class="save-message"
+id="saveMessage">
+이미지를 생성하고 있습니다...
+</div>
+
+
+<script>
+
+/* =========================================================
+   GLOBAL
+========================================================= */
+
+let generatedPages=[];
+
+let currentPageIndex=0;
+
+let savedSelection=null;
+
+let updateTimer=null;
+
+let resizeTimer=null;
+
+let backgroundImageData="";
+
+
+const PAGE_WIDTH=1080;
+
+const PAGE_HEIGHT=1350;
+
+const PAGE_PADDING_TOP=110;
+
+const PAGE_PADDING_BOTTOM=110;
+
+const FOOTER_BOTTOM=55;
+
+const CONTENT_FOOTER_GAP=18;
+
+const MAX_DIVIDER_HEIGHT=820;
+
+const DIVIDER_SAFE_GAP=35;
+
+const DEFAULT_PARAGRAPH_SPACING=0;
+
+const SUBTITLE_SPACE_HEIGHT=82.5;
+
+const TITLE_SPACE_HEIGHT=118;
+
+
+const $=id=>
+  document.getElementById(id);
+
+
+/* =========================================================
+   FONT NAME NORMALIZATION
+========================================================= */
+
+function normalizeFontFamily(font){
+
+  if(!font){
+    return "Noto Serif KR";
+  }
+
+  const map={
+
+    "조선일보명조":
+      "조선일보명조",
+
+    "KoPubWorldBatang":
+      "KoPubWorldBatang",
+
+    "KoPubWorld바탕":
+      "KoPubWorldBatang"
+
+  };
+
+  return map[font] || font;
+
+}
+
+
+/* =========================================================
+   FONT STACK
+========================================================= */
+
+function getFontStack(font){
+
+  const normalized=
+    normalizeFontFamily(font);
+
+  if(normalized==="조선일보명조"){
+
+    return '"조선일보명조", "Chosunilbo_myungjo", serif';
+
+  }
+
+  return `"${normalized}", serif`;
+
+}
+
+
+/* =========================================================
+   LINE HEIGHT
+========================================================= */
+
+function getLineHeightRatio(){
+
+  const value=
+    Number($("lineHeight").value)||180;
+
+  return value/100;
+
+}
+
+
+/* =========================================================
+   LETTER SPACING
+========================================================= */
+
+function getLetterSpacing(){
+
+  const value=
+    Number($("letterSpacing").value)||0;
+
+  return value/100;
+
+}
+
+
+/* =========================================================
+   SELECTION
+========================================================= */
+
+function keepSelection(e){
+
+  e.preventDefault();
+
+}
+
+
+function editorSelection(){
+
+  const sel=
+    window.getSelection();
+
+  const ed=
+    $("contentEditor");
+
+  if(!sel.rangeCount){
+    return null;
+  }
+
+  const range=
+    sel.getRangeAt(0);
+
+  if(
+    !ed.contains(
+      range.commonAncestorContainer
+    )
+  ){
+
+    return null;
+
+  }
+
+  return range.cloneRange();
+
+}
+
+
+function saveSelection(){
+
+  const range=
+    editorSelection();
+
+  if(range){
+
+    savedSelection=
+      range;
+
+  }
+
+
+}
+
+
+function restoreSelection(){
+
+  if(!savedSelection){
+    return false;
+  }
+
+  const ed=
+    $("contentEditor");
+
+  if(
+    !ed.contains(
+      savedSelection.commonAncestorContainer
+    )
+  ){
+
+    return false;
+
+  }
+
+  const sel=
+    window.getSelection();
+
+  sel.removeAllRanges();
+
+  sel.addRange(
+    savedSelection
+  );
+
+  return true;
+
+}
+
+
+/* =========================================================
+   ★ 수정 1: 현재 선택된 글 서식 표시
+========================================================= */
+
+function getBlockElement(node){
+
+  if(!node){
+    return null;
+  }
+
+  let el=
+    node.nodeType===Node.TEXT_NODE
+      ? node.parentElement
+      : node;
+
+  const ed=
+    $("contentEditor");
+
+  while(
+    el &&
+    el!==ed &&
+    !/^(P|DIV|LI|H[1-6])$/.test(
+      el.tagName||""
+    )
+  ){
+
+    el=
+      el.parentElement;
+
+  }
+
+  return el && el!==ed
+    ? el
+    : null;
+
+}
+
+
+/* =========================================================
+   STYLE DATA
+========================================================= */
+
+function getStyleData(){
+
+  return{
+
+    bgColor:
+      $("bgColor").value,
+
+    bodyColor:
+      $("bodyColor").value,
+
+    titleColor:
+      $("titleColor").value,
+
+    subtitleColor:
+      $("subtitleColor").value,
+
+    fontFamily:
+      normalizeFontFamily(
+        $("fontFamily").value
+      ),
+
+    titleFontFamily:
+      normalizeFontFamily(
+        $("titleFontFamily").value
+      ),
+
+    fontSize:
+      Number($("fontSize").value)||24,
+
+    lineHeight:
+      getLineHeightRatio(),
+
+    lineHeightPercent:
+      Number($("lineHeight").value)||180,
+
+    letterSpacing:
+      getLetterSpacing(),
+
+    letterSpacingPercent:
+      Number($("letterSpacing").value)||0,
+
+    bodyWeight:
+      $("bodyWeight").value,
+
+    bodyItalic:
+      $("bodyItalic").checked,
+
+    titleWeight:
+      $("titleWeight").value,
+
+    titleItalic:
+      $("titleItalic").checked,
+
+    showSubtitle:
+      $("showSubtitle").checked,
+
+    showTitle:
+      $("showTitle").checked,
+
+    showPageNumber:
+      $("showPageNumber").checked,
+
+    pageNumberColor:
+      $("pageNumberColor").value,
+
+    footerText:
+      $("footerText").value,
+
+    footerBorderColor:
+      $("footerBorderColor").value,
+
+    footerTextColor:
+      $("footerTextColor").value,
+
+    bodyTextAlign:
+      $("bodyTextAlign").value || "left",
+
+    dividerColor:
+      $("dividerColor").value,
+
+    dividerWidth:
+      Number($("dividerWidth").value)||2,
+
+    columnMode:
+      Number($("columnMode").value)||1,
+
+    showColumnDivider:
+      $("showColumnDivider").checked,
+
+    verticalAlign:
+      $("verticalAlign").value,
+
+    enterIndent:
+      $("enterIndent").checked,
+
+    paragraphSpacing:
+      Number($("paragraphSpacing").value)
+      ||DEFAULT_PARAGRAPH_SPACING,
+
+    leftMargin:
+      Number($("leftMargin").value)||120,
+
+    rightMargin:
+      Number($("rightMargin").value)||120,
+
+    backgroundImage:
+      backgroundImageData,
+
+    backgroundOpacity:
+      Number($("backgroundOpacity").value)/100,
+
+    backgroundSize:
+      $("backgroundSize").value,
+
+    backgroundPosition:
+      $("backgroundPosition").value
+
+  };
+
+}
+
+
+function getInputData(){
+
+  return{
+
+    subtitle:
+      $("subtitleInput").value,
+
+    startPage:
+      parseInt(
+        $("pageInput").value
+      )||1,
+
+    title:
+      $("titleInput").value,
+
+    editor:
+      $("contentEditor")
+
+  };
+
+}
+
+
+/* =========================================================
+   CURRENT SETTINGS DISPLAY
+========================================================= */
+
+function updateCurrentValueDisplays(){
+
+  const setValue=
+    (id,value)=>{
+
+      const el=
+        $("value-"+id);
+
+      if(el){
+
+        el.textContent=
+          value;
+
+      }
+
+    };
+
+
+  setValue(
+    "bgColor",
+    $("bgColor").value.toUpperCase()
+  );
+
+  setValue(
+    "bodyColor",
+    $("bodyColor").value.toUpperCase()
+  );
+
+  setValue(
+    "fontFamily",
+    $("fontFamily")
+      .options[
+        $("fontFamily").selectedIndex
+      ].text
+  );
+
+  setValue(
+    "fontSize",
+    `${$("fontSize").value}px`
+  );
+
+  setValue(
+    "lineHeight",
+    `${$("lineHeight").value}%`
+  );
+
+  const letter=
+    Number(
+      $("letterSpacing").value
+    )||0;
+
+  setValue(
+    "letterSpacing",
+    `${letter>0?"+":""}${letter}%`
+  );
+
+  setValue(
+    "bodyWeight",
+    $("bodyWeight")
+      .options[
+        $("bodyWeight").selectedIndex
+      ].text
+  );
+
+  setValue(
+    "bodyItalic",
+    $("bodyItalic").checked
+      ? "사용"
+      : "미사용"
+  );
+
+
+  setValue(
+    "titleColor",
+    $("titleColor").value.toUpperCase()
+  );
+
+  setValue(
+    "subtitleColor",
+    $("subtitleColor").value.toUpperCase()
+  );
+
+  setValue(
+    "titleFontFamily",
+    $("titleFontFamily")
+      .options[
+        $("titleFontFamily").selectedIndex
+      ].text
+  );
+
+  setValue(
+    "titleWeight",
+    $("titleWeight")
+      .options[
+        $("titleWeight").selectedIndex
+      ].text
+  );
+
+  setValue(
+    "titleItalic",
+    $("titleItalic").checked
+      ? "사용"
+      : "미사용"
+  );
+
+  setValue(
+    "showSubtitle",
+    $("showSubtitle").checked
+      ? "표시"
+      : "숨김"
+  );
+
+  setValue(
+    "showTitle",
+    $("showTitle").checked
+      ? "표시"
+      : "숨김"
+  );
+
+
+  setValue(
+    "showPageNumber",
+    $("showPageNumber").checked
+      ? "표시"
+      : "숨김"
+  );
+
+  setValue(
+    "pageNumberColor",
+    $("pageNumberColor")
+      .value
+      .toUpperCase()
+  );
+
+  setValue(
+    "footerText",
+    $("footerText").value ||
+    "(없음)"
+  );
+
+  setValue(
+    "footerBorderColor",
+    $("footerBorderColor")
+      .value
+      .toUpperCase()
+  );
+
+  setValue(
+    "footerTextColor",
+    $("footerTextColor")
+      .value
+      .toUpperCase()
+  );
+
+  setValue(
+    "bodyTextAlign",
+    $("bodyTextAlign")
+      .options[
+        $("bodyTextAlign").selectedIndex
+      ].text
+  );
+
+
+  setValue(
+    "columnMode",
+    $("columnMode")
+      .options[
+        $("columnMode").selectedIndex
+      ].text
+  );
+
+  setValue(
+    "showColumnDivider",
+    $("showColumnDivider").checked
+      ? "표시"
+      : "숨김"
+  );
+
+  setValue(
+    "dividerColor",
+    $("dividerColor")
+      .value
+      .toUpperCase()
+  );
+
+  setValue(
+    "dividerWidth",
+    `${$("dividerWidth").value}px`
+  );
+
+
+  setValue(
+    "verticalAlign",
+    $("verticalAlign")
+      .options[
+        $("verticalAlign").selectedIndex
+      ].text
+  );
+
+  setValue(
+    "enterIndent",
+    $("enterIndent").checked
+      ? "사용"
+      : "미사용"
+  );
+
+  setValue(
+    "paragraphSpacing",
+    `${$("paragraphSpacing").value}px`
+  );
+
+  setValue(
+    "leftMargin",
+    `${$("leftMargin").value}px`
+  );
+
+  setValue(
+    "rightMargin",
+    `${$("rightMargin").value}px`
+  );
+
+
+  if($("backgroundOpacityValue")){
+
+    $("backgroundOpacityValue")
+      .textContent=
+      `${$("backgroundOpacity").value}%`;
+
+  }
+
+}
+
+
+/* =========================================================
+   PREVIEW SCALE
+========================================================= */
+
+function getPreviewScale(){
+
+  const viewport=
+    $("previewViewport");
+
+  if(!viewport){
+    return 1;
+  }
+
+  const available=
+    viewport.clientWidth;
+
+  if(!available){
+    return 1;
+  }
+
+  return Math.min(
+    1,
+    available/PAGE_WIDTH
+  );
+
+}
+
+
+/* =========================================================
+   EDITOR VISUAL SCALE
+========================================================= */
+
+function applyEditorVisualScale(){
+
+  const ed=
+    $("contentEditor");
+
+  if(!ed){
+    return;
+  }
+
+  const style=
+    getStyleData();
+
+  const scale=
+    getPreviewScale();
+
+  const visualSize=
+    style.fontSize*scale;
+
+  ed.style.fontSize=
+    `${Math.max(
+      1,
+      visualSize
+    )}px`;
+
+  ed.style.lineHeight=
+    String(
+      style.lineHeight
+    );
+
+  ed.style.fontFamily=
+    getFontStack(
+      style.fontFamily
+    );
+
+  ed.style.fontWeight=
+    String(
+      style.bodyWeight
+    );
+
+  ed.style.fontStyle=
+    style.bodyItalic
+      ? "italic"
+      : "normal";
+
+  ed.style.color=
+    style.bodyColor;
+
+  ed.style.letterSpacing=
+    `${style.letterSpacing}em`;
+
+  ed.style.textAlign=
+    style.bodyTextAlign||"left";
+
+
+  ed.style.setProperty(
+    "--paragraph-spacing",
+    `${style.paragraphSpacing*scale}px`
+  );
+
+}
+
+
+/* =========================================================
+   EDITOR BASE STYLE
+========================================================= */
+
+function applyEditorBaseStyle(){
+
+  const ed=
+    $("contentEditor");
+
+  const style=
+    getStyleData();
+
+  ed.style.fontFamily=
+    getFontStack(
+      style.fontFamily
+    );
+
+  ed.style.fontWeight=
+    String(
+      style.bodyWeight
+    );
+
+  ed.style.fontStyle=
+    style.bodyItalic
+      ? "italic"
+      : "normal";
+
+  ed.style.color=
+    style.bodyColor;
+
+  ed.style.letterSpacing=
+    `${style.letterSpacing}em`;
+
+  ed.style.lineHeight=
+    String(
+      style.lineHeight
+    );
+
+  applyEditorVisualScale();
+
+}
+
+
+/* =========================================================
+   INDENT
+========================================================= */
+
+function applyIndentToExistingParagraphs(){
+
+  const ed=
+    $("contentEditor");
+
+  const enabled=
+    $("enterIndent").checked;
+
+  Array.from(
+    ed.querySelectorAll("p")
+  ).forEach(
+    p=>{
+
+      if(enabled){
+
+        p.classList.add(
+          "auto-indent"
+        );
+
+      }else{
+
+        p.classList.remove(
+          "auto-indent"
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+function applyIndentToParagraph(p){
+
+  if(!p){
+    return;
+  }
+
+  if(
+    $("enterIndent").checked
+  ){
+
+    p.classList.add(
+      "auto-indent"
+    );
+
+  }else{
+
+    p.classList.remove(
+      "auto-indent"
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   ENTER
+========================================================= */
+
+$("contentEditor").addEventListener(
+"keydown",
+function(e){
+
+  if(e.key!=="Enter" || e.isComposing){
+    return;
+  }
+
+  e.preventDefault();
+
+  const ed=$("contentEditor");
+  ed.focus();
+
+  const sel=window.getSelection();
+
+  if(!sel.rangeCount){
+    return;
+  }
+
+  if(e.shiftKey){
+    document.execCommand("insertLineBreak",false,null);
+  }else{
+    document.execCommand("insertParagraph",false,null);
+  }
+
+  requestAnimationFrame(()=>{
+    const currentSel=window.getSelection();
+
+    if(!currentSel.rangeCount){
+      updateAll();
+      return;
+    }
+
+    const block=getBlockElement(currentSel.anchorNode);
+
+    if(block && !e.shiftKey){
+      applyIndentToParagraph(block);
+
+      if(!block.childNodes.length){
+        block.appendChild(document.createElement("br"));
+      }
+    }
+
+    savedSelection=currentSel.getRangeAt(0).cloneRange();
+    updateAll();
+  });
+
+});
+
+
+/* =========================================================
+   BASIC FORMAT
+========================================================= */
+
+function formatText(command){
+
+  if(!restoreSelection()){
+    return;
+  }
+
+  document.execCommand(
+    command,
+    false,
+    null
+  );
+
+  saveSelection();
+
+  $("contentEditor").focus();
+
+  updateAll();
+
+}
+
+
+function alignSelection(type){
+
+  if(!restoreSelection()){
+    return;
+  }
+
+  const command={
+
+    left:"justifyLeft",
+
+    center:"justifyCenter",
+
+    right:"justifyRight",
+
+    justify:"justifyFull"
+
+  }[type];
+
+  document.execCommand(
+    command,
+    false,
+    null
+  );
+
+  saveSelection();
+
+  $("contentEditor").focus();
+
+  updateAll();
+
+}
+
+
+/* =========================================================
+   INLINE STYLE
+========================================================= */
+
+function applyInlineStyle(
+  prop,
+  value
+){
+
+  if(!restoreSelection()){
+    return;
+  }
+
+  const sel=
+    window.getSelection();
+
+  if(!sel.rangeCount){
+    return;
+  }
+
+  const range=
+    sel.getRangeAt(0);
+
+  if(range.collapsed){
+    return;
+  }
+
+  const span=
+    document.createElement(
+      "span"
+    );
+
+  span.style[prop]=
+    value;
+
+  try{
+
+    span.appendChild(
+      range.extractContents()
+    );
+
+    range.insertNode(
+      span
+    );
+
+    const next=
+      document.createRange();
+
+    next.selectNodeContents(
+      span
+    );
+
+    sel.removeAllRanges();
+
+    sel.addRange(
+      next
+    );
+
+    savedSelection=
+      next.cloneRange();
+
+  }catch(e){
+
+    document.execCommand(
+      "styleWithCSS",
+      false,
+      true
+    );
+
+  }
+
+  $("contentEditor").focus();
+
+  updateAll();
+
+}
+
+
+function updateInlineFontLabel(){
+  const fontSelect=$("inlineFont");
+  if(!fontSelect){
+    return;
+  }
+
+  const option=fontSelect.options[fontSelect.selectedIndex];
+  if(option && fontSelect.value){
+    option.textContent=option.dataset.originalLabel || option.textContent;
+  }
+}
+
+$("inlineFont").addEventListener(
+"change",
+function(){
+
+  if(!this.value){
+    return;
+  }
+
+  applyInlineStyle(
+    "fontFamily",
+    getFontStack(
+      this.value
+    )
+  );
+
+  updateInlineFontLabel();
+
+});
+
+
+
+
+$("inlineColor").addEventListener(
+"input",
+function(){
+
+  applyInlineStyle(
+    "color",
+    this.value
+  );
+
+});
+
+
+/* =========================================================
+   HIGHLIGHT
+========================================================= */
+
+function applyHighlight(){
+
+  if(!restoreSelection()){
+    return;
+  }
+
+  const sel=
+    window.getSelection();
+
+  if(!sel.rangeCount){
+    return;
+  }
+
+  const range=
+    sel.getRangeAt(0);
+
+  if(range.collapsed){
+    return;
+  }
+
+  const span=
+    document.createElement(
+      "span"
+    );
+
+  span.style.backgroundColor=
+    $("highlightColor").value;
+
+  span.appendChild(
+    range.extractContents()
+  );
+
+  range.insertNode(
+    span
+  );
+
+  const next=
+    document.createRange();
+
+  next.selectNodeContents(
+    span
+  );
+
+  sel.removeAllRanges();
+
+  sel.addRange(
+    next
+  );
+
+  savedSelection=
+    next.cloneRange();
+
+  $("contentEditor").focus();
+
+  updateAll();
+
+}
+
+
+function removeInlineFormat(){
+
+  if(!restoreSelection()){
+    return;
+  }
+
+  document.execCommand(
+    "removeFormat",
+    false,
+    null
+  );
+
+  saveSelection();
+
+  $("contentEditor").focus();
+
+  updateAll();
+
+}
+
+
+/* =========================================================
+   PAGE PADDING
+========================================================= */
+
+function applyPagePadding(
+  page,
+  style
+){
+
+  page.style.paddingTop=
+    PAGE_PADDING_TOP+"px";
+
+  page.style.paddingBottom=
+    PAGE_PADDING_BOTTOM+"px";
+
+  page.style.paddingLeft=
+    style.leftMargin+"px";
+
+  page.style.paddingRight=
+    style.rightMargin+"px";
+
+
+  const footer=
+    page.querySelector(
+      ".page-end"
+    );
+
+  if(footer){
+
+    footer.style.left=
+      style.leftMargin+"px";
+
+    footer.style.right=
+      style.rightMargin+"px";
+
+  }
+
+}
+
+
+/* =========================================================
+   PAGE STYLE
+========================================================= */
+
+function applyPageStyle(
+  page,
+  style
+){
+
+  const font=
+    getFontStack(
+      style.fontFamily
+    );
+
+  page.style.backgroundColor=
+    style.bgColor;
+
+  page.style.color=
+    style.bodyColor;
+
+  page.style.fontFamily=
+    font;
+
+  page.style.fontSize=
+    `${style.fontSize}px`;
+
+  page.style.lineHeight=
+    String(
+      style.lineHeight
+    );
+
+  page.style.fontWeight=
+    String(
+      style.bodyWeight
+    );
+
+  page.style.fontStyle=
+    style.bodyItalic
+      ? "italic"
+      : "normal";
+
+  page.style.letterSpacing=
+    `${style.letterSpacing}em`;
+
+  page.style.setProperty(
+    "--paragraph-spacing",
+    `${style.paragraphSpacing}px`
+  );
+
+  page.style.setProperty(
+    "--footer-border-color",
+    style.footerBorderColor
+  );
+
+  page.style.setProperty(
+    "--footer-text-color",
+    style.footerTextColor
+  );
+
+  page.style.setProperty(
+    "--divider-color",
+    style.dividerColor
+  );
+
+  page.style.setProperty(
+    "--divider-width",
+    style.dividerWidth+"px"
+  );
+
+  applyPagePadding(
+    page,
+    style
+  );
+
+}
+
+
+/* =========================================================
+   CONTENT CLONING
+========================================================= */
+
+function cloneContentBlocks(){
+
+  const ed=
+    $("contentEditor");
+
+  const result=[];
+
+  applyIndentToExistingParagraphs();
+
+
+  Array.from(
+    ed.childNodes
+  ).forEach(
+    node=>{
+
+      if(
+        node.nodeType===
+        Node.TEXT_NODE
+      ){
+
+        if(
+          node.textContent.trim()
+        ){
+
+          const p=
+            document.createElement(
+              "p"
+            );
+
+          p.textContent=
+            node.textContent;
+
+          applyIndentToParagraph(
+            p
+          );
+
+          result.push(
+            p
+          );
+
+        }
+
+        return;
+
+      }
+
+
+      if(
+        node.nodeName==="BR"
+      ){
+
+        const p=
+          document.createElement(
+            "p"
+          );
+
+        p.innerHTML=
+          "<br>";
+
+        applyIndentToParagraph(
+          p
+        );
+
+        result.push(
+          p
+        );
+
+        return;
+
+      }
+
+
+      const clone=
+        node.cloneNode(true);
+
+
+      clone
+        .querySelectorAll(
+          "[contenteditable]"
+        )
+        .forEach(
+          el=>{
+            el.removeAttribute(
+              "contenteditable"
+            );
+          }
+        );
+
+
+      if(
+        clone.tagName==="P" &&
+        !clone.textContent.trim() &&
+        !clone.querySelector("br")
+      ){
+
+        return;
+
+      }
+
+
+      if(
+        clone.textContent.trim() ||
+        clone.querySelector("br")
+      ){
+
+        result.push(
+          clone
+        );
+
+      }
+
+    }
+  );
+
+
+  /*
+    페이지 생성 전에 맨 앞의 빈 블록을 제거한다.
+    복사/붙여넣기나 브라우저의 contenteditable 동작으로 생긴
+    보이지 않는 빈 문단이 첫 페이지 상단 여백을 늘리지 않도록 한다.
+  */
+  while(
+    result.length &&
+    !result[0].textContent.trim()
+  ){
+    result.shift();
+  }
+
+  return result;
+
+}
+
+
+/* =========================================================
+   TEXT RANGE
+========================================================= */
+
+function textNodes(root){
+
+  const walker=
+    document.createTreeWalker(
+      root,
+      NodeFilter.SHOW_TEXT
+    );
+
+  const result=[];
+
+  let node;
+
+  while(
+    node=walker.nextNode()
+  ){
+
+    result.push(
+      node
+    );
+
+  }
+
+  return result;
+
+}
+
+
+function locateChar(
+  root,
+  pos
+){
+
+  const nodes=
+    textNodes(root);
+
+  let count=0;
+
+
+  for(
+    const node of nodes
+  ){
+
+    const len=
+      node.textContent.length;
+
+    if(
+      pos<=count+len
+    ){
+
+      return{
+
+        node,
+
+        offset:
+          pos-count
+
+      };
+
+    }
+
+    count+=len;
+
+  }
+
+
+  if(nodes.length){
+
+    const node=
+      nodes[
+        nodes.length-1
+      ];
+
+    return{
+
+      node,
+
+      offset:
+        node.textContent.length
+
+    };
+
+  }
+
+
+  return null;
+
+}
+
+
+function fragmentForRange(
+  root,
+  start,
+  end
+){
+
+  const a=
+    locateChar(
+      root,
+      start
+    );
+
+  const b=
+    locateChar(
+      root,
+      end
+    );
+
+  if(!a || !b){
+    return null;
+  }
+
+  const range=
+    document.createRange();
+
+  range.setStart(
+    a.node,
+    a.offset
+  );
+
+  range.setEnd(
+    b.node,
+    b.offset
+  );
+
+  return range.cloneContents();
+
+}
+
+
+function fragHTML(fragment){
+
+  if(!fragment){
+    return "";
+  }
+
+  const div=
+    document.createElement(
+      "div"
+    );
+
+  div.appendChild(
+    fragment
+  );
+
+  return div.innerHTML;
+
+}
+
+
+/* =========================================================
+   BACKGROUND
+========================================================= */
+
+function addBackgroundToPage(
+  page,
+  style
+){
+
+  if(!style.backgroundImage){
+    return;
+  }
+
+  const layer=
+    document.createElement(
+      "div"
+    );
+
+  layer.className=
+    "book-page-bg";
+
+
+  const img=
+    document.createElement(
+      "img"
+    );
+
+  img.src=
+    style.backgroundImage;
+
+  img.style.opacity=
+    style.backgroundOpacity;
+
+  img.style.objectFit=
+    style.backgroundSize;
+
+  img.style.objectPosition=
+    style.backgroundPosition;
+
+
+  layer.appendChild(
+    img
+  );
+
+  page.insertBefore(
+    layer,
+    page.firstChild
+  );
+
+}
+
+
+/* =========================================================
+   ★ 수정 3 & 5: HEADER
+   모든 페이지에서 표시/비표시 적용,
+   숨김 시 공간 자체를 접어(collapse) 본문이
+   비율에 맞춰 채워지도록 함
+========================================================= */
+
+function addHeader(
+  page,
+  index,
+  style,
+  data
+){
+
+  const subtitleSpace=
+    document.createElement(
+      "div"
+    );
+
+  subtitleSpace.className=
+    "subtitle-space";
+
+
+  if(!style.showSubtitle){
+
+    subtitleSpace.classList.add(
+      "empty"
+    );
+
+    subtitleSpace.classList.add(
+      "collapsed"
+    );
+
+  }
+
+
+  const subtitle=
+    document.createElement(
+      "div"
+    );
+
+  subtitle.className=
+    "subtitle";
+
+  /*
+    서브타이틀은 1페이지에서만 텍스트를 채우고
+    나머지 페이지는 표시 여부와 무관하게 비워둠
+    (제목은 보통 첫 페이지에만 등장하는 구조 유지)
+  */
+
+  subtitle.textContent=
+    index===0
+      ? data.subtitle
+      : "";
+
+  subtitle.style.fontFamily=
+    getFontStack(
+      style.titleFontFamily
+    );
+
+  subtitle.style.color=
+    style.subtitleColor;
+
+
+  subtitleSpace.appendChild(
+    subtitle
+  );
+
+  page.appendChild(
+    subtitleSpace
+  );
+
+
+  const titleSpace=
+    document.createElement(
+      "div"
+    );
+
+  titleSpace.className=
+    "book-title-space";
+
+
+  if(!style.showTitle){
+
+    titleSpace.classList.add(
+      "empty"
+    );
+
+    titleSpace.classList.add(
+      "collapsed"
+    );
+
+  }
+
+
+  const title=
+    document.createElement(
+      "div"
+    );
+
+  title.className=
+    "book-title";
+
+  title.textContent=
+    index===0
+      ? data.title
+      : "";
+
+  title.style.fontFamily=
+    getFontStack(
+      style.titleFontFamily
+    );
+
+  title.style.color=
+    style.titleColor;
+
+  title.style.fontWeight=
+    style.titleWeight;
+
+  title.style.fontStyle=
+    style.titleItalic
+      ? "italic"
+      : "normal";
+
+
+  titleSpace.appendChild(
+    title
+  );
+
+  page.appendChild(
+    titleSpace
+  );
+
+}
+
+
+/* =========================================================
+   ★ 수정 5: 페이지 상단 콘텐츠 시작 위치 계산
+   showSubtitle / showTitle 여부에 따라
+   콘텐츠 상단 여백이 동적으로 줄어들도록 함
+========================================================= */
+
+function getContentTopOffset(style){
+
+  let offset=
+    PAGE_PADDING_TOP;
+
+  offset+=
+    style.showSubtitle
+      ? SUBTITLE_SPACE_HEIGHT
+      : 0;
+
+  offset+=
+    style.showTitle
+      ? TITLE_SPACE_HEIGHT
+      : 0;
+
+  return offset;
+
+}
+
+
+/* =========================================================
+   FOOTER
+========================================================= */
+
+function addPageDecorations(
+  page,
+  index,
+  style,
+  data
+){
+
+  if(style.showPageNumber){
+
+    const number=
+      document.createElement(
+        "div"
+      );
+
+    number.className=
+      "page-number";
+
+    number.textContent=
+      String(
+        data.startPage+index
+      ).padStart(
+        3,
+        "0"
+      );
+
+    number.style.fontFamily=
+      getFontStack(
+        style.fontFamily
+      );
+
+    number.style.color=
+      style.pageNumberColor;
+
+    page.appendChild(
+      number
+    );
+
+  }
+
+
+  const footer=
+    document.createElement(
+      "div"
+    );
+
+  footer.className=
+    "page-end";
+
+  footer.style.fontFamily=
+    getFontStack(
+      style.fontFamily
+    );
+
+  footer.style.borderTopColor=
+    style.footerBorderColor;
+
+  footer.style.color=
+    style.footerTextColor;
+
+  footer.style.left=
+    style.leftMargin+"px";
+
+  footer.style.right=
+    style.rightMargin+"px";
+
+  footer.textContent=
+    style.footerText;
+
+
+  page.appendChild(
+    footer
+  );
+
+}
+
+
+/* =========================================================
+   APPLY CONTENT STYLE
+========================================================= */
+
+function applyContentStyle(
+  element,
+  style
+){
+
+  const font=
+    getFontStack(
+      style.fontFamily
+    );
+
+  element.style.fontFamily=
+    font;
+
+  element.style.fontSize=
+    `${style.fontSize}px`;
+
+  element.style.lineHeight=
+    String(
+      style.lineHeight
+    );
+
+  element.style.fontWeight=
+    String(
+      style.bodyWeight
+    );
+
+  element.style.fontStyle=
+    style.bodyItalic
+      ? "italic"
+      : "normal";
+
+  element.style.color=
+    style.bodyColor;
+
+  element.style.letterSpacing=
+    `${style.letterSpacing}em`;
+
+  element.style.textAlign=
+    style.bodyTextAlign||"left";
+
+
+  element.style.setProperty(
+    "--paragraph-spacing",
+    `${style.paragraphSpacing}px`
+  );
+
+}
+
+
+/* =========================================================
+   MEASURE SINGLE
+========================================================= */
+
+function buildMeasureSingle(
+  blocks,
+  index,
+  style,
+  data
+){
+
+  const page=
+    $("measurePage");
+
+  page.innerHTML="";
+
+
+  applyPageStyle(
+    page,
+    style
+  );
+
+  addPageDecorations(
+    page,
+    index,
+    style,
+    data
+  );
+
+  addHeader(
+    page,
+    index,
+    style,
+    data
+  );
+
+
+  const content=
+    document.createElement(
+      "div"
+    );
+
+  content.className=
+    "book-content-single";
+
+
+  applyContentStyle(
+    content,
+    style
+  );
+
+
+  content.innerHTML=
+    blocks.join("");
+
+
+  page.appendChild(
+    content
+  );
+
+
+  return{
+
+    page,
+
+    content,
+
+    footer:
+      page.querySelector(
+        ".page-end"
+      )
+
+  };
+
+}
+
+
+/* =========================================================
+   FIT SINGLE
+========================================================= */
+
+function fitsSingle(
+  blocks,
+  index,
+  style,
+  data
+){
+
+  const x=
+    buildMeasureSingle(
+      blocks,
+      index,
+      style,
+      data
+    );
+
+
+  const bottomLimit=
+    x.footer.getBoundingClientRect().top-
+    CONTENT_FOOTER_GAP;
+
+
+  const contentRect=
+    x.content.getBoundingClientRect();
+
+
+  return(
+    contentRect.bottom<=
+    bottomLimit+0.5
+  );
+
+}
+
+
+/* =========================================================
+   MEASURE TWO
+========================================================= */
+
+function buildMeasureTwo(
+  left,
+  right,
+  index,
+  style,
+  data
+){
+
+  const page=
+    $("measurePage");
+
+  page.innerHTML="";
+
+
+  applyPageStyle(
+    page,
+    style
+  );
+
+  addPageDecorations(
+    page,
+    index,
+    style,
+    data
+  );
+
+  addHeader(
+    page,
+    index,
+    style,
+    data
+  );
+
+
+  const columns=
+    document.createElement(
+      "div"
+    );
+
+  columns.className=
+    "book-columns"+
+    (
+      style.showColumnDivider
+        ? " has-divider"
+        : ""
+    );
+
+
+  const leftColumn=
+    document.createElement(
+      "div"
+    );
+
+  leftColumn.className=
+    "book-column";
+
+
+  const rightColumn=
+    document.createElement(
+      "div"
+    );
+
+  rightColumn.className=
+    "book-column";
+
+
+  applyContentStyle(
+    leftColumn,
+    style
+  );
+
+  applyContentStyle(
+    rightColumn,
+    style
+  );
+
+
+  leftColumn.innerHTML=
+    left.join("");
+
+  rightColumn.innerHTML=
+    right.join("");
+
+
+  columns.appendChild(
+    leftColumn
+  );
+
+  columns.appendChild(
+    rightColumn
+  );
+
+  page.appendChild(
+    columns
+  );
+
+
+  return{
+
+    page,
+
+    columns,
+
+    left:leftColumn,
+
+    right:rightColumn,
+
+    footer:
+      page.querySelector(
+        ".page-end"
+      )
+
+  };
+
+}
+
+
+function fitsTwo(
+  left,
+  right,
+  index,
+  style,
+  data
+){
+
+  const x=
+    buildMeasureTwo(
+      left,
+      right,
+      index,
+      style,
+      data
+    );
+
+
+  const bottomLimit=
+    x.footer.getBoundingClientRect().top-
+    CONTENT_FOOTER_GAP;
+
+
+  const leftRect=
+    x.left.getBoundingClientRect();
+
+  const rightRect=
+    x.right.getBoundingClientRect();
+
+
+  return(
+
+    leftRect.bottom<=
+      bottomLimit+0.5 &&
+
+    rightRect.bottom<=
+      bottomLimit+0.5
+
+  );
+
+}
+
+
+function fitsTwoColumn(
+  existing,
+  other,
+  html,
+  side,
+  index,
+  style,
+  data
+){
+
+  if(side==="left"){
+
+    return fitsTwo(
+      [...existing,html],
+      other,
+      index,
+      style,
+      data
+    );
+
+  }
+
+  return fitsTwo(
+    other,
+    [...existing,html],
+    index,
+    style,
+    data
+  );
+
+}
+
+
+/* =========================================================
+   SPLIT HTML
+========================================================= */
+
+function makeSplitHTML(
+  block,
+  html
+){
+
+  const indent=
+    block.classList &&
+    block.classList.contains(
+      "auto-indent"
+    )
+      ? " auto-indent"
+      : "";
+
+
+  return`
+    <p class="${indent.trim()}">
+      ${html}
+    </p>
+  `;
+
+}
+
+
+/* =========================================================
+   SINGLE SPLIT
+========================================================= */
+
+function splitBlockToSingle(
+  block,
+  existing,
+  index,
+  style,
+  data
+){
+
+  const total=
+    block.textContent.length;
+
+
+  if(total<=0){
+
+    return{
+
+      first:
+        block.innerHTML ||
+        "<br>",
+
+      rest:""
+
+    };
+
+  }
+
+
+  function canFit(html){
+
+    return fitsSingle(
+      [
+        ...existing,
+        makeSplitHTML(
+          block,
+          html
+        )
+      ],
+      index,
+      style,
+      data
+    );
+
+  }
+
+
+  const whole=
+    fragHTML(
+      fragmentForRange(
+        block,
+        0,
+        total
+      )
+    );
+
+
+  if(canFit(whole)){
+
+    return{
+
+      first:whole,
+
+      rest:""
+
+    };
+
+  }
+
+
+  let low=1;
+
+  let high=total;
+
+  let best=0;
+
+
+  while(low<=high){
+
+    const mid=
+      Math.floor(
+        (low+high)/2
+      );
+
+
+    const html=
+      fragHTML(
+        fragmentForRange(
+          block,
+          0,
+          mid
+        )
+      );
+
+
+    if(
+      html &&
+      canFit(html)
+    ){
+
+      best=mid;
+
+      low=mid+1;
+
+    }else{
+
+      high=mid-1;
+
+    }
+
+  }
+
+
+  if(best<=0){
+
+    return{
+
+      first:"",
+
+      rest:""
+
+    };
+
+  }
+
+
+  const text=
+    block.textContent;
+
+
+  let split=
+    best;
+
+
+  for(
+    let i=best;
+    i>Math.max(
+      1,
+      best-150
+    );
+    i--
+  ){
+
+    const char=
+      text.charAt(
+        i-1
+      );
+
+
+    if(
+      /\s/.test(char) ||
+      /[,.!?。！？…]/.test(char)
+    ){
+
+      split=i;
+
+      break;
+
+    }
+
+  }
+
+
+  while(
+    split>1 &&
+    /\s/.test(
+      text.charAt(
+        split-1
+      )
+    )
+  ){
+
+    split--;
+
+  }
+
+
+  while(
+    split<total &&
+    /\s/.test(
+      text.charAt(split)
+    )
+  ){
+
+    split++;
+
+  }
+
+
+  const first=
+    fragHTML(
+      fragmentForRange(
+        block,
+        0,
+        split
+      )
+    );
+
+
+  const rest=
+    fragHTML(
+      fragmentForRange(
+        block,
+        split,
+        total
+      )
+    );
+
+
+  return{
+
+    first,
+
+    rest
+
+  };
+
+}
+
+
+/* =========================================================
+   TWO COLUMN SPLIT
+========================================================= */
+
+function splitBlockToColumn(
+  block,
+  existing,
+  other,
+  side,
+  index,
+  style,
+  data
+){
+
+  const total=
+    block.textContent.length;
+
+
+  if(total<=0){
+
+    return{
+
+      first:
+        block.innerHTML ||
+        "<br>",
+
+      rest:""
+
+    };
+
+  }
+
+
+  function canFit(html){
+
+    return fitsTwoColumn(
+      existing,
+      other,
+      makeSplitHTML(
+        block,
+        html
+      ),
+      side,
+      index,
+      style,
+      data
+    );
+
+  }
+
+
+  const whole=
+    fragHTML(
+      fragmentForRange(
+        block,
+        0,
+        total
+      )
+    );
+
+
+  if(canFit(whole)){
+
+    return{
+
+      first:whole,
+
+      rest:""
+
+    };
+
+  }
+
+
+  let low=1;
+
+  let high=total;
+
+  let best=0;
+
+
+  while(low<=high){
+
+    const mid=
+      Math.floor(
+        (low+high)/2
+      );
+
+
+    const html=
+      fragHTML(
+        fragmentForRange(
+          block,
+          0,
+          mid
+        )
+      );
+
+
+    if(
+      html &&
+      canFit(html)
+    ){
+
+      best=mid;
+
+      low=mid+1;
+
+    }else{
+
+      high=mid-1;
+
+    }
+
+  }
+
+
+  if(best<=0){
+
+    return{
+
+      first:"",
+
+      rest:""
+
+    };
+
+  }
+
+
+  const text=
+    block.textContent;
+
+
+  let split=
+    best;
+
+
+  for(
+    let i=best;
+    i>Math.max(
+      1,
+      best-150
+    );
+    i--
+  ){
+
+    const char=
+      text.charAt(
+        i-1
+      );
+
+
+    if(
+      /\s/.test(char) ||
+      /[,.!?。！？…]/.test(char)
+    ){
+
+      split=i;
+
+      break;
+
+    }
+
+  }
+
+
+  while(
+    split>1 &&
+    /\s/.test(
+      text.charAt(
+        split-1
+      )
+    )
+  ){
+
+    split--;
+
+  }
+
+
+  while(
+    split<total &&
+    /\s/.test(
+      text.charAt(split)
+    )
+  ){
+
+    split++;
+
+  }
+
+
+  const first=
+    fragHTML(
+      fragmentForRange(
+        block,
+        0,
+        split
+      )
+    );
+
+
+  const rest=
+    fragHTML(
+      fragmentForRange(
+        block,
+        split,
+        total
+      )
+    );
+
+
+  return{
+
+    first,
+
+    rest
+
+  };
+
+}
+
+
+function blockHTML(block){
+
+  return block.outerHTML;
+
+}
+
+
+/* =========================================================
+   SINGLE PAGINATION
+========================================================= */
+
+function createSinglePages(
+  source,
+  style,
+  data
+){
+
+  const pages=[];
+
+  let queue=
+    source.slice();
+
+  let current=[];
+
+  let pageIndex=0;
+
+
+  while(queue.length){
+
+    const block=
+      queue[0];
+
+    const html=
+      blockHTML(block);
+
+
+    if(
+      fitsSingle(
+        [...current,html],
+        pageIndex,
+        style,
+        data
+      )
+    ){
+
+      current.push(
+        html
+      );
+
+      queue.shift();
+
+      continue;
+
+    }
+
+
+    if(current.length){
+
+      const split=
+        splitBlockToSingle(
+          block,
+          current,
+          pageIndex,
+          style,
+          data
+        );
+
+
+      if(split.first){
+
+        current.push(
+          makeSplitHTML(
+            block,
+            split.first
+          )
+        );
+
+        queue.shift();
+
+
+        if(split.rest){
+
+          const rest=
+            document.createElement(
+              block.tagName||"p"
+            );
+
+          rest.innerHTML=
+            split.rest;
+
+
+          if(
+            block.classList &&
+            block.classList.contains(
+              "auto-indent"
+            )
+          ){
+
+            rest.classList.add(
+              "auto-indent"
+            );
+
+          }
+
+
+          queue.unshift(
+            rest
+          );
+
+        }
+
+
+        pages.push(
+          current
+        );
+
+        current=[];
+
+        pageIndex++;
+
+        continue;
+
+      }
+
+
+      pages.push(
+        current
+      );
+
+      current=[];
+
+      pageIndex++;
+
+      continue;
+
+    }
+
+
+    const split=
+      splitBlockToSingle(
+        block,
+        [],
+        pageIndex,
+        style,
+        data
+      );
+
+
+    if(!split.first){
+
+      pages.push([
+        html
+      ]);
+
+      queue.shift();
+
+      pageIndex++;
+
+      continue;
+
+    }
+
+
+    current.push(
+      makeSplitHTML(
+        block,
+        split.first
+      )
+    );
+
+    queue.shift();
+
+
+    if(split.rest){
+
+      const rest=
+        document.createElement(
+          block.tagName||"p"
+        );
+
+      rest.innerHTML=
+        split.rest;
+
+
+      if(
+        block.classList &&
+        block.classList.contains(
+          "auto-indent"
+        )
+      ){
+
+        rest.classList.add(
+          "auto-indent"
+        );
+
+      }
+
+
+      queue.unshift(
+        rest
+      );
+
+    }
+
+
+    pages.push(
+      current
+    );
+
+    current=[];
+
+    pageIndex++;
+
+  }
+
+
+  if(current.length){
+
+    pages.push(
+      current
+    );
+
+  }
+
+
+  if(!pages.length){
+
+    pages.push([]);
+
+  }
+
+
+  return pages;
+
+}
+
+
+/* =========================================================
+   TWO COLUMN PAGINATION
+========================================================= */
+
+function createTwoColumnPages(
+  source,
+  style,
+  data
+){
+
+  const pages=[];
+
+  let queue=
+    source.slice();
+
+  let pageIndex=0;
+
+
+  while(queue.length){
+
+    let left=[];
+
+    let right=[];
+
+
+    while(queue.length){
+
+      const block=
+        queue[0];
+
+      const html=
+        blockHTML(block);
+
+
+      if(
+        fitsTwoColumn(
+          left,
+          [],
+          html,
+          "left",
+          pageIndex,
+          style,
+          data
+        )
+      ){
+
+        left.push(
+          html
+        );
+
+        queue.shift();
+
+        continue;
+
+      }
+
+
+      const split=
+        splitBlockToColumn(
+          block,
+          left,
+          [],
+          "left",
+          pageIndex,
+          style,
+          data
+        );
+
+
+      if(!split.first){
+        break;
+      }
+
+
+      left.push(
+        makeSplitHTML(
+          block,
+          split.first
+        )
+      );
+
+      queue.shift();
+
+
+      if(split.rest){
+
+        const rest=
+          document.createElement(
+            block.tagName||"p"
+          );
+
+        rest.innerHTML=
+          split.rest;
+
+
+        if(
+          block.classList &&
+          block.classList.contains(
+            "auto-indent"
+          )
+        ){
+
+          rest.classList.add(
+            "auto-indent"
+          );
+
+        }
+
+
+        queue.unshift(
+          rest
+        );
+
+      }
+
+
+      break;
+
+    }
+
+
+    while(queue.length){
+
+      const block=
+        queue[0];
+
+      const html=
+        blockHTML(block);
+
+
+      if(
+        fitsTwoColumn(
+          right,
+          left,
+          html,
+          "right",
+          pageIndex,
+          style,
+          data
+        )
+      ){
+
+        right.push(
+          html
+        );
+
+        queue.shift();
+
+        continue;
+
+      }
+
+
+      const split=
+        splitBlockToColumn(
+          block,
+          right,
+          left,
+          "right",
+          pageIndex,
+          style,
+          data
+        );
+
+
+      if(!split.first){
+        break;
+      }
+
+
+      right.push(
+        makeSplitHTML(
+          block,
+          split.first
+        )
+      );
+
+      queue.shift();
+
+
+      if(split.rest){
+
+        const rest=
+          document.createElement(
+            block.tagName||"p"
+          );
+
+        rest.innerHTML=
+          split.rest;
+
+
+        if(
+          block.classList &&
+          block.classList.contains(
+            "auto-indent"
+          )
+        ){
+
+          rest.classList.add(
+            "auto-indent"
+          );
+
+        }
+
+
+        queue.unshift(
+          rest
+        );
+
+      }
+
+
+      break;
+
+    }
+
+
+    if(
+      !left.length &&
+      !right.length
+    ){
+
+      const block=
+        queue.shift();
+
+      left.push(
+        blockHTML(block)
+      );
+
+    }
+
+
+    pages.push({
+
+      left,
+
+      right
+
+    });
+
+
+    pageIndex++;
+
+  }
+
+
+  if(!pages.length){
+
+    pages.push({
+
+      left:[],
+
+      right:[]
+
+    });
+
+  }
+
+
+  return pages;
+
+}
+
+
+/* =========================================================
+   CREATE SINGLE PAGE
+========================================================= */
+
+function createSinglePageElement(
+  blocks,
+  index,
+  style,
+  data
+){
+
+  const page=
+    document.createElement(
+      "div"
+    );
+
+  page.className=
+    "book-page generated-page";
+
+  page.dataset.index=
+    index;
+
+
+  applyPageStyle(
+    page,
+    style
+  );
+
+
+  addBackgroundToPage(
+    page,
+    style
+  );
+
+
+  addPageDecorations(
+    page,
+    index,
+    style,
+    data
+  );
+
+
+  addHeader(
+    page,
+    index,
+    style,
+    data
+  );
+
+
+  const content=
+    document.createElement(
+      "div"
+    );
+
+  content.className=
+    "book-content-single";
+
+
+  applyContentStyle(
+    content,
+    style
+  );
+
+
+  content.innerHTML=
+    blocks.join("");
+
+
+  page.appendChild(
+    content
+  );
+
+
+  return page;
+
+}
+
+
+/* =========================================================
+   CREATE TWO COLUMN PAGE
+========================================================= */
+
+function createTwoPageElement(
+  pageData,
+  index,
+  style,
+  data
+){
+
+  const page=
+    document.createElement(
+      "div"
+    );
+
+  page.className=
+    "book-page generated-page";
+
+  page.dataset.index=
+    index;
+
+
+  applyPageStyle(
+    page,
+    style
+  );
+
+
+  addBackgroundToPage(
+    page,
+    style
+  );
+
+
+  addPageDecorations(
+    page,
+    index,
+    style,
+    data
+  );
+
+
+  addHeader(
+    page,
+    index,
+    style,
+    data
+  );
+
+
+  const columns=
+    document.createElement(
+      "div"
+    );
+
+  columns.className=
+    "book-columns"+
+    (
+      style.showColumnDivider
+        ? " has-divider"
+        : ""
+    );
+
+
+  const left=
+    document.createElement(
+      "div"
+    );
+
+  left.className=
+    "book-column";
+
+  left.innerHTML=
+    pageData.left.join("");
+
+
+  const right=
+    document.createElement(
+      "div"
+    );
+
+  right.className=
+    "book-column";
+
+  right.innerHTML=
+    pageData.right.join("");
+
+
+  applyContentStyle(
+    left,
+    style
+  );
+
+  applyContentStyle(
+    right,
+    style
+  );
+
+
+  columns.appendChild(
+    left
+  );
+
+  columns.appendChild(
+    right
+  );
+
+
+  page.appendChild(
+    columns
+  );
+
+
+  return page;
+
+}
+
+
+/* =========================================================
+   DIVIDER
+========================================================= */
+
+function updateDividerGeometry(page){
+
+  const columns=
+    page.querySelector(
+      ".book-columns"
+    );
+
+
+  if(!columns){
+    return;
+  }
+
+
+  if(
+    !columns.classList.contains(
+      "has-divider"
+    )
+  ){
+
+    return;
+
+  }
+
+
+  const footer=
+    page.querySelector(
+      ".page-end"
+    );
+
+
+  if(!footer){
+    return;
+  }
+
+
+  const columnsRect=
+    columns.getBoundingClientRect();
+
+  const footerRect=
+    footer.getBoundingClientRect();
+
+
+  const contentTop=
+    columnsRect.top;
+
+  const contentBottom=
+    footerRect.top-
+    DIVIDER_SAFE_GAP;
+
+
+  const availableHeight=
+    contentBottom-
+    contentTop;
+
+
+  if(availableHeight<=0){
+
+    columns.style.setProperty(
+      "--divider-height",
+      "0px"
+    );
+
+    return;
+
+  }
+
+
+  let dividerHeight=
+    Math.min(
+      MAX_DIVIDER_HEIGHT,
+      availableHeight
+    );
+
+
+  dividerHeight=
+    Math.max(
+      0,
+      Math.min(
+        dividerHeight,
+        availableHeight
+      )
+    );
+
+
+  const topOffset=
+    Math.max(
+      0,
+      (
+        availableHeight-
+        dividerHeight
+      )/2
+    );
+
+
+  columns.style.setProperty(
+    "--divider-height",
+    dividerHeight+"px"
+  );
+
+  columns.style.setProperty(
+    "--divider-top",
+    topOffset+"px"
+  );
+
+}
+
+
+function updateDividerHeight(page){
+
+  updateDividerGeometry(page);
+
+}
+
+
+/* =========================================================
+   ★ 수정 5: VERTICAL ALIGNMENT
+   showSubtitle / showTitle 여부에 따라
+   실제 콘텐츠 상단 위치(FIXED_CONTENT_TOP 대체)를
+   동적으로 계산하여 본문이 비율에 맞게 채워지도록 함
+========================================================= */
+
+function applyVerticalAlignment(
+  page,
+  style
+){
+
+  const target=
+    page.querySelector(
+      ".book-content-single, .book-columns"
+    );
+
+  if(!target){
+    return;
+  }
+
+  /*
+    본문 상단 정렬은 DOM에 실제로 배치된
+    서브타이틀/타이틀 공간을 그대로 사용한다.
+    이전처럼 계산한 contentAreaTop까지 강제로 이동시키지 않아
+    페이지마다 본문이 불필요하게 아래로 밀리는 문제를 방지한다.
+  */
+  target.style.transform="translateY(0px)";
+
+  if(style.verticalAlign!=="center"){
+    updateDividerGeometry(page);
+    return;
+  }
+
+  const footer=
+    page.querySelector(".page-end");
+
+  if(!footer){
+    return;
+  }
+
+  let contentHeight=
+    target.getBoundingClientRect().height;
+
+  if(target.classList.contains("book-columns")){
+
+    contentHeight=0;
+
+    target.querySelectorAll(".book-column").forEach(
+      column=>{
+        contentHeight=Math.max(
+          contentHeight,
+          column.getBoundingClientRect().height
+        );
+      }
+    );
+  }
+
+  const targetRect=
+    target.getBoundingClientRect();
+
+  const footerRect=
+    footer.getBoundingClientRect();
+
+  const availableHeight=
+    footerRect.top-
+    CONTENT_FOOTER_GAP-
+    targetRect.top;
+
+  if(
+    availableHeight>contentHeight &&
+    contentHeight>0
+  ){
+
+    const extraOffset=
+      (availableHeight-contentHeight)/2;
+
+    target.style.transform=
+      `translateY(${Math.max(0,extraOffset)}px)`;
+  }
+
+  updateDividerGeometry(page);
+
+}
+
+/* =========================================================
+   CREATE ALL PAGES
+========================================================= */
+
+function createPages(){
+
+  applyIndentToExistingParagraphs();
+
+
+  const data=
+    getInputData();
+
+  const style=
+    getStyleData();
+
+
+  const source=
+    cloneContentBlocks();
+
+
+  if(style.columnMode===2){
+
+    generatedPages=
+      createTwoColumnPages(
+        source,
+        style,
+        data
+      );
+
+  }else{
+
+    generatedPages=
+      createSinglePages(
+        source,
+        style,
+        data
+      );
+
+  }
+
+
+  currentPageIndex=
+    Math.min(
+      currentPageIndex,
+      Math.max(
+        0,
+        generatedPages.length-1
+      )
+    );
+
+
+  renderPages();
+
+}
+
+
+/* =========================================================
+   PREVIEW SCALE
+========================================================= */
+
+function scalePreviewPage(
+  page,
+  wrap
+){
+
+  const available=
+    wrap.clientWidth;
+
+  if(!available){
+    return;
+  }
+
+
+  const scale=
+    Math.min(
+      1,
+      available/PAGE_WIDTH
+    );
+
+
+  const translate=
+    page.dataset.verticalOffset
+      ? Number(
+          page.dataset.verticalOffset
+        )
+      : 0;
+
+
+  page.style.transform=
+    `translateY(${translate}px) scale(${scale})`;
+
+
+  wrap.style.height=
+    (
+      PAGE_HEIGHT*scale+
+      Math.max(
+        0,
+        translate
+      )*scale
+    )+"px";
+
+}
+
+
+/* =========================================================
+   PREVIEW NAVIGATION
+========================================================= */
+
+function updatePreviewNavigation(){
+
+  const total=
+    generatedPages.length;
+
+
+  const prev=
+    $("prevPageBtn");
+
+  const next=
+    $("nextPageBtn");
+
+  const index=
+    $("previewIndex");
+
+
+  if(!total){
+
+    index.textContent=
+      "0 / 0";
+
+    prev.disabled=true;
+
+    next.disabled=true;
+
+    return;
+
+  }
+
+
+  currentPageIndex=
+    Math.max(
+      0,
+      Math.min(
+        currentPageIndex,
+        total-1
+      )
+    );
+
+
+  index.textContent=
+    `${currentPageIndex+1} / ${total}`;
+
+
+  prev.disabled=
+    currentPageIndex<=0;
+
+  next.disabled=
+    currentPageIndex>=total-1;
+
+
+  $("pageCount").textContent=
+    `${total} PAGE${
+      total===1
+        ? ""
+        : "S"
+    }`;
+
+}
+
+
+/* =========================================================
+   MOVE PREVIEW SLIDER
+========================================================= */
+
+function updatePreviewSlider(
+  animate=true
+){
+
+  const area=
+    $("previewArea");
+
+  const viewport=
+    $("previewViewport");
+
+
+  if(!area || !viewport){
+    return;
+  }
+
+
+  if(animate){
+
+    area.style.transition=
+      "transform .35s ease";
+
+  }else{
+
+    area.style.transition=
+      "none";
+
+  }
+
+
+  area.style.transform=
+    `translateX(-${
+      currentPageIndex*100
+    }%)`;
+
+
+  const wraps=
+    area.querySelectorAll(
+      ".preview-page-wrap"
+    );
+
+
+  if(wraps.length){
+
+    const currentWrap=
+      wraps[
+        currentPageIndex
+      ];
+
+
+    if(currentWrap){
+
+      viewport.style.height=
+        currentWrap.offsetHeight+
+        "px";
+
+    }
+
+  }
+
+
+  updatePreviewNavigation();
+
+
+  requestAnimationFrame(
+    ()=>{
+      applyEditorVisualScale();
+    }
+  );
+
+}
+
+
+/* =========================================================
+   GO TO PAGE
+========================================================= */
+
+function goToPage(index){
+
+  if(!generatedPages.length){
+    return;
+  }
+
+
+  const nextIndex=
+    Math.max(
+      0,
+      Math.min(
+        index,
+        generatedPages.length-1
+      )
+    );
+
+
+  if(
+    nextIndex===
+    currentPageIndex
+  ){
+
+    updatePreviewSlider();
+
+    return;
+
+  }
+
+
+  currentPageIndex=
+    nextIndex;
+
+
+  updatePreviewSlider(
+    true
+  );
+
+}
+
+
+/* =========================================================
+   KEYBOARD PAGE NAVIGATION
+========================================================= */
+
+document.addEventListener(
+"keydown",
+function(e){
+
+  const active=
+    document.activeElement;
+
+  if(
+    active===
+      $("contentEditor") ||
+    active===
+      $("subtitleInput") ||
+    active===
+      $("titleInput") ||
+    active===
+      $("pageInput") ||
+    active===document.body
+  ){
+
+    if(active!==document.body){
+      return;
+    }
+
+  }
+
+
+  if(e.key==="ArrowLeft"){
+
+    goToPage(
+      currentPageIndex-1
+    );
+
+  }
+
+  if(e.key==="ArrowRight"){
+
+    goToPage(
+      currentPageIndex+1
+    );
+
+  }
+
+});
+
+
+/* =========================================================
+   RENDER
+========================================================= */
+
+function renderPages(){
+
+  const data=
+    getInputData();
+
+  const style=
+    getStyleData();
+
+  const area=
+    $("previewArea");
+
+  const viewport=
+    $("previewViewport");
+
+
+  area.innerHTML="";
+
+  area.style.transform=
+    "translateX(0%)";
+
+  area.style.transition=
+    "none";
+
+
+  generatedPages.forEach(
+    (pageData,index)=>{
+
+      let page;
+
+
+      if(style.columnMode===2){
+
+        page=
+          createTwoPageElement(
+            pageData,
+            index,
+            style,
+            data
+          );
+
+      }else{
+
+        page=
+          createSinglePageElement(
+            pageData,
+            index,
+            style,
+            data
+          );
+
+      }
+
+
+      const wrap=
+        document.createElement(
+          "div"
+        );
+
+      wrap.className=
+        "preview-page-wrap";
+
+
+      wrap.appendChild(
+        page
+      );
+
+      area.appendChild(
+        wrap
+      );
+
+
+      requestAnimationFrame(
+        ()=>{
+
+          applyVerticalAlignment(
+            page,
+            style
+          );
+
+
+          const transform=
+            page.style.transform;
+
+
+          const match=
+            transform.match(
+              /translateY\(([-\d.]+)px\)/
+            );
+
+
+          page.dataset.verticalOffset=
+            match
+              ? match[1]
+              : "0";
+
+
+          scalePreviewPage(
+            page,
+            wrap
+          );
+
+
+          if(
+            index===
+            currentPageIndex
+          ){
+
+            viewport.style.height=
+              wrap.offsetHeight+
+              "px";
+
+          }
+
+
+          applyEditorVisualScale();
+
+        }
+      );
+
+
+      page.addEventListener(
+        "click",
+        ()=>{
+          goToPage(index);
+        }
+      );
+
+    }
+  );
+
+
+  updatePreviewNavigation();
+
+
+  requestAnimationFrame(
+    ()=>{
+
+      updatePreviewSlider(
+        false
+      );
+
+      applyEditorVisualScale();
+
+    }
+  );
+
+
+  setTimeout(
+    ()=>{
+
+      document
+        .querySelectorAll(
+          ".preview-page-wrap"
+        )
+        .forEach(
+          wrap=>{
+
+            const page=
+              wrap.querySelector(
+                ".book-page"
+              );
+
+
+            if(!page){
+              return;
+            }
+
+
+            page.style.transform=
+              "translateY(0px)";
+
+
+            applyVerticalAlignment(
+              page,
+              style
+            );
+
+
+            const transform=
+              page.style.transform;
+
+
+            const match=
+              transform.match(
+                /translateY\(([-\d.]+)px\)/
+              );
+
+
+            page.dataset.verticalOffset=
+              match
+                ? match[1]
+                : "0";
+
+
+            scalePreviewPage(
+              page,
+              wrap
+            );
+
+          }
+        );
+
+
+      updatePreviewSlider(
+        false
+      );
+
+
+      applyEditorVisualScale();
+
+    },
+    180
+  );
+
+}
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+"resize",
+function(){
+
+  clearTimeout(
+    resizeTimer
+  );
+
+
+  resizeTimer=
+    setTimeout(
+      ()=>{
+
+        const style=
+          getStyleData();
+
+
+        document
+          .querySelectorAll(
+            ".preview-page-wrap"
+          )
+          .forEach(
+            wrap=>{
+
+              const page=
+                wrap.querySelector(
+                  ".book-page"
+                );
+
+
+              if(page){
+
+                page.style.transform=
+                  "translateY(0px)";
+
+
+                applyVerticalAlignment(
+                  page,
+                  style
+                );
+
+
+                const transform=
+                  page.style.transform;
+
+
+                const match=
+                  transform.match(
+                    /translateY\(([-\d.]+)px\)/
+                  );
+
+
+                page.dataset.verticalOffset=
+                  match
+                    ? match[1]
+                    : "0";
+
+
+                scalePreviewPage(
+                  page,
+                  wrap
+                );
+
+              }
+
+            }
+          );
+
+
+        updatePreviewSlider(
+          false
+        );
+
+
+        applyEditorVisualScale();
+
+      },
+      100
+    );
+
+});
+
+
+/* =========================================================
+   UPDATE
+========================================================= */
+
+function updateAll(){
+
+  clearTimeout(
+    updateTimer
+  );
+
+
+  updateTimer=
+    setTimeout(
+      async()=>{
+
+        updateMarginPreview();
+
+        updateCurrentValueDisplays();
+
+        applyEditorBaseStyle();
+
+        await waitForFonts();
+
+        createPages();
+
+      },
+      100
+    );
+
+}
+
+
+/* =========================================================
+   INPUT EVENTS
+========================================================= */
+
+const inputs=[
+
+"subtitleInput",
+"pageInput",
+"titleInput",
+
+"bgColor",
+"bodyColor",
+"titleColor",
+
+"subtitleColor",
+
+"fontFamily",
+"fontSize",
+"lineHeight",
+"letterSpacing",
+
+"bodyWeight",
+"bodyItalic",
+
+"titleFontFamily",
+"titleWeight",
+"titleItalic",
+
+"showSubtitle",
+"showTitle",
+
+"showPageNumber",
+"pageNumberColor",
+
+"footerText",
+
+"footerBorderColor",
+"footerTextColor",
+
+"bodyTextAlign",
+
+"dividerColor",
+
+"dividerWidth",
+
+"columnMode",
+"showColumnDivider",
+
+"verticalAlign",
+
+"paragraphSpacing",
+
+"leftMargin",
+"rightMargin",
+
+"backgroundOpacity",
+"backgroundSize",
+"backgroundPosition"
+
+];
+
+
+inputs.forEach(
+  id=>{
+
+    $(id).addEventListener(
+      "input",
+      updateAll
+    );
+
+    $(id).addEventListener(
+      "change",
+      updateAll
+    );
+
+  }
+);
+
+
+/* =========================================================
+   INDENT CHECKBOX
+========================================================= */
+
+$("enterIndent").addEventListener(
+"change",
+function(){
+
+  applyIndentToExistingParagraphs();
+
+  updateCurrentValueDisplays();
+
+  saveSelection();
+
+  updateAll();
+
+});
+
+
+/* =========================================================
+   MARGIN
+========================================================= */
+
+function updateMarginPreview(){
+
+  const left=
+    Number(
+      $("leftMargin").value
+    )||120;
+
+  const right=
+    Number(
+      $("rightMargin").value
+    )||120;
+
+
+  $("marginPreview").textContent=
+    `왼쪽 ${left}px / 오른쪽 ${right}px`;
+
+}
+
+
+/* =========================================================
+   BACKGROUND OPACITY
+========================================================= */
+
+$("backgroundOpacity").addEventListener(
+"input",
+function(){
+
+  $("backgroundOpacityValue").textContent=
+    this.value+"%";
+
+  updateCurrentValueDisplays();
+
+});
+
+
+/* =========================================================
+   BACKGROUND IMAGE
+========================================================= */
+
+$("backgroundImage").addEventListener(
+"change",
+function(){
+
+  const file=
+    this.files &&
+    this.files[0];
+
+
+  if(!file){
+    return;
+  }
+
+
+  if(
+    !file.type.startsWith(
+      "image/"
+    )
+  ){
+
+    alert(
+      "이미지 파일만 사용할 수 있습니다."
+    );
+
+    this.value="";
+
+    return;
+
+  }
+
+
+  const reader=
+    new FileReader();
+
+
+  reader.onload=
+    function(e){
+
+      backgroundImageData=
+        e.target.result;
+
+      updateAll();
+
+    };
+
+
+  reader.readAsDataURL(
+    file
+  );
+
+});
+
+
+$("removeBackground").addEventListener(
+"click",
+function(){
+
+  backgroundImageData="";
+
+  $("backgroundImage").value="";
+
+  updateAll();
+
+});
+
+
+/* =========================================================
+   CONTENT INPUT
+========================================================= */
+
+$("contentEditor").addEventListener(
+"input",
+function(){
+
+  applyIndentToExistingParagraphs();
+
+  saveSelection();
+
+  updateAll();
+
+});
+
+
+$("contentEditor").addEventListener(
+"mouseup",
+saveSelection
+);
+
+
+$("contentEditor").addEventListener(
+"keyup",
+saveSelection
+);
+
+
+$("contentEditor").addEventListener(
+"blur",
+function(){
+
+  setTimeout(
+    ()=>{
+
+      const active=
+        document.activeElement;
+
+      if(
+        !active ||
+        (
+          active.tagName!=="SELECT" &&
+          active.tagName!=="INPUT" &&
+          active.tagName!=="BUTTON"
+        )
+      ){
+
+      
+      }
+
+    },
+    50
+  );
+
+}
+);
+
+
+/* =========================================================
+   CLEAN PASTE
+   - 외부 서식 제거
+   - 붙여넣기 맨 앞/뒤의 빈 줄 제거
+   - 연속된 빈 줄은 한 줄만 유지
+   → 복붙 시 첫 페이지 본문이 아래로 밀리는 문제 방지
+========================================================= */
+
+$("contentEditor").addEventListener(
+"paste",
+function(e){
+
+  e.preventDefault();
+
+  let text=
+    (
+      e.clipboardData ||
+      window.clipboardData
+    ).getData(
+      "text/plain"
+    );
+
+  if(!text){
+    return;
+  }
+
+  /*
+    워드/웹소설/메신저 등에서 복사할 때
+    텍스트 앞에 보이지 않는 줄바꿈이나 공백 줄이 함께 들어오는 경우가 있다.
+    이 빈 문단들이 실제 책 페이지에서는 line-height만큼의 높이를 차지해서
+    제목과 본문 사이 여백이 비정상적으로 커지는 원인이었다.
+  */
+  text=
+    text
+      .replace(/\uFEFF/g,"")
+      .replace(/\r\n/g,"\n")
+      .replace(/\r/g,"\n")
+      .replace(/[ \t\u00A0]+\n/g,"\n")
+      .replace(/\n[ \t\u00A0]+/g,"\n")
+      .replace(/^(?:[ \t\u00A0]*\n)+/,"")
+      .replace(/(?:\n[ \t\u00A0]*)+$/,"")
+      .replace(/\n{3,}/g,"\n\n");
+
+  if(!text){
+    return;
+  }
+
+  restoreSelection();
+
+  const sel=
+    window.getSelection();
+
+  if(!sel.rangeCount){
+    return;
+  }
+
+  const range=
+    sel.getRangeAt(0);
+
+  range.deleteContents();
+
+  const lines=
+    text.split("\n");
+
+  const fragment=
+    document.createDocumentFragment();
+
+  /*
+    빈 줄 하나는 의도적인 문단 공백으로 유지하되,
+    붙여넣기 시작 부분에는 빈 문단을 만들지 않는다.
+  */
+  lines.forEach(
+    (line,index)=>{
+
+      const p=
+        document.createElement(
+          "p"
+        );
+
+      if(line.trim().length){
+
+        p.textContent=
+          line;
+
+      }else{
+
+        p.appendChild(
+          document.createElement("br")
+        );
+      }
+
+      applyIndentToParagraph(
+        p
+      );
+
+      fragment.appendChild(
+        p
+      );
+
+    }
+  );
+
+  /*
+    caret을 붙여넣은 마지막 문단 뒤에 정확히 배치한다.
+    DocumentFragment는 insertNode 후 비워지므로
+    마지막 노드를 삽입 전에 따로 기억한다.
+  */
+  const lastNode=
+    fragment.lastChild;
+
+  range.insertNode(
+    fragment
+  );
+
+  if(lastNode){
+
+    const next=
+      document.createRange();
+
+    next.selectNodeContents(
+      lastNode
+    );
+
+    next.collapse(false);
+
+    sel.removeAllRanges();
+    sel.addRange(next);
+
+    savedSelection=
+      next.cloneRange();
+  }
+
+  /*
+    혹시 기존 에디터 안에 붙여넣기 이전부터 있던
+    맨 앞의 빈 문단이 있더라도 제거한다.
+  */
+  const editor=
+    $("contentEditor");
+
+  while(
+    editor.firstChild &&
+    (
+      editor.firstChild.nodeType===Node.TEXT_NODE
+        ? !editor.firstChild.textContent.trim()
+        : (
+            editor.firstChild.tagName==="BR" ||
+            (
+              /^(P|DIV)$/.test(editor.firstChild.tagName||"") &&
+              !editor.firstChild.textContent.trim()
+            )
+          )
+    )
+  ){
+    editor.removeChild(editor.firstChild);
+  }
+
+  updateAll();
+});
+
+
+/* =========================================================
+   FONT LOADING
+========================================================= */
+
+async function waitForFonts(){
+
+  try{
+
+    if(document.fonts){
+
+      await document.fonts.ready;
+
+    }
+
+
+    const style=
+      getStyleData();
+
+
+    const fonts=[
+
+      style.fontFamily,
+
+      style.titleFontFamily,
+
+      "조선일보명조",
+
+      "KoPubWorldBatang"
+
+    ];
+
+
+    for(
+      const font of fonts
+    ){
+
+      await document.fonts.load(
+        `400 24px "${font}"`
+      );
+
+      await document.fonts.load(
+        `500 24px "${font}"`
+      );
+
+      await document.fonts.load(
+        `600 24px "${font}"`
+      );
+
+      await document.fonts.load(
+        `700 24px "${font}"`
+      );
+
+    }
+
+  }catch(error){
+
+    console.log(
+      "Font loading:",
+      error
+    );
+
+  }
+
+}
+
+
+/* =========================================================
+   SAVE MESSAGE
+========================================================= */
+
+function showMessage(text){
+
+  $("saveMessage").textContent=
+    text;
+
+  $("saveMessage").style.display=
+    "block";
+
+}
+
+
+function hideMessage(){
+
+  $("saveMessage").style.display=
+    "none";
+
+}
+
+
+/* =========================================================
+   SAVE PAGE
+========================================================= */
+
+async function savePage(
+  page,
+  pageNumber
+){
+
+  await waitForFonts();
+
+
+  const style=
+    getStyleData();
+
+
+  const wrap=
+    page.parentElement;
+
+
+  const oldTransform=
+    page.style.transform;
+
+
+  page.style.transform=
+    "none";
+
+
+  wrap.style.height=
+    PAGE_HEIGHT+"px";
+
+
+  applyVerticalAlignment(
+    page,
+    style
+  );
+
+
+  updateDividerGeometry(
+    page
+  );
+
+
+  await new Promise(
+    resolve=>
+      setTimeout(
+        resolve,
+        180
+      )
+  );
+
+
+  const canvas=
+    await html2canvas(
+      page,
+      {
+
+        scale:2,
+
+        width:PAGE_WIDTH,
+
+        height:PAGE_HEIGHT,
+
+        backgroundColor:
+          style.bgColor,
+
+        useCORS:true,
+
+        allowTaint:false,
+
+        logging:false
+
+      }
+    );
+
+
+  page.style.transform=
+    oldTransform;
+
+
+  const currentOffset=
+    page.dataset.verticalOffset ||
+    "0";
+
+
+  page.style.transform=
+    `translateY(${currentOffset}px)`;
+
+
+  scalePreviewPage(
+    page,
+    wrap
+  );
+
+
+  applyEditorVisualScale();
+
+
+  const link=
+    document.createElement(
+      "a"
+    );
+
+
+  link.href=
+    canvas.toDataURL(
+      "image/png"
+    );
+
+
+  link.download=
+    `book-page-${pageNumber}.png`;
+
+
+  document.body.appendChild(
+    link
+  );
+
+
+  link.click();
+
+  link.remove();
+
+}
+
+
+/* =========================================================
+   CURRENT PAGE
+========================================================= */
+
+async function downloadCurrentPage(){
+
+  const pages=
+    document.querySelectorAll(
+      ".generated-page"
+    );
+
+
+  if(!pages.length){
+    return;
+  }
+
+
+  const data=
+    getInputData();
+
+
+  const number=
+    String(
+      data.startPage+
+      currentPageIndex
+    ).padStart(
+      3,
+      "0"
+    );
+
+
+  showMessage(
+    "현재 페이지 저장 중..."
+  );
+
+
+  await savePage(
+    pages[currentPageIndex],
+    number
+  );
+
+
+  hideMessage();
+
+}
+
+
+/* =========================================================
+   ALL PAGES
+========================================================= */
+
+async function downloadAllPages(){
+
+  const pages=
+    document.querySelectorAll(
+      ".generated-page"
+    );
+
+
+  if(!pages.length){
+    return;
+  }
+
+
+  const data=
+    getInputData();
+
+
+  for(
+    let i=0;
+    i<pages.length;
+    i++
+  ){
+
+    showMessage(
+      `${i+1} / ${pages.length} 페이지 저장 중...`
+    );
+
+
+    await savePage(
+      pages[i],
+      String(
+        data.startPage+i
+      ).padStart(
+        3,
+        "0"
+      )
+    );
+
+
+    await new Promise(
+      resolve=>
+        setTimeout(
+          resolve,
+          350
+        )
+    );
+
+  }
+
+
+  showMessage(
+    "전체 페이지 저장 완료!"
+  );
+
+
+  setTimeout(
+    hideMessage,
+    1200
+  );
+
+}
+
+
+/* =========================================================
+   START
+========================================================= */
+
+updateMarginPreview();
+
+updateCurrentValueDisplays();
+
+applyIndentToExistingParagraphs();
+
+applyEditorBaseStyle();
+
+
+
+waitForFonts()
+.then(
+  createPages
+)
+.then(
+  ()=>{
+
+    updateCurrentValueDisplays();
+
+    applyEditorVisualScale();
+
+    updatePreviewNavigation();
+
+  }
+);
+
+</script>
+
+</body>
+</html>
+
